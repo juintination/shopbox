@@ -290,4 +290,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-06
+**Version**: 1.1.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-06
