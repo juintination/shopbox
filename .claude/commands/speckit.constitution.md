@@ -18,6 +18,32 @@ Transactional Outbox Pattern, Inbox Pattern, Message Relay를
 - 통합 테스트: Testcontainers로 실제 MySQL과 Kafka를 띄워서 검증한다
 - 테스트 이름은 Given/When/Then 형식으로 시나리오를 명확하게 표현한다
 
+## TDD 사이클 규칙 (NON-NEGOTIABLE)
+
+각 태스크는 반드시 다음 순서를 따른다:
+
+1. 🔴 Red: 테스트 코드 작성 후 `./gradlew test` 실행 → 반드시 실패해야 함
+2. 🟢 Green: 최소 구현 후 `./gradlew test` 실행 → 반드시 통과해야 함
+3. 🔵 Refactor: 코드 정리 후 `./gradlew test` 실행 → 여전히 통과해야 함
+
+- `./gradlew test` 실행 없이 다음 단계로 넘어가는 것을 금지한다
+- 테스트가 실패하지 않으면 구현으로 넘어가지 않는다
+- 테스트가 통과하지 않으면 다음 태스크로 넘어가지 않는다
+
+## 테스트 범위 규칙
+
+테스트는 다음 두 가지만 작성한다:
+
+- 단위 테스트: Service 레이어만 → `{Domain}ServiceTest.kt` (Mockk)
+- 통합 테스트: Controller 레이어만 → `{Domain}ControllerTest.kt` (Testcontainers)
+
+작성하지 않는 테스트:
+
+- RepositoryTest (JPA가 이미 검증된 라이브러리)
+- EntityTest
+- DTOTest
+- 그 외 세분화된 단위 테스트
+
 ## 아키텍처 원칙
 
 - 전체 구조는 DDD의 Bounded Context 개념을 따른다
@@ -59,6 +85,17 @@ common/
 ├── event/                       ← 이벤트 공통 인터페이스 (DomainEvent)
 └── dto/
     └── response/                ← 공통 응답 포맷 (ApiResponse)
+```
+
+## Entity 네이밍 규칙
+
+- Entity 클래스명에 `Entity` 접미사를 붙이지 않는다
+- 테이블명은 `@Table(name = "...")`으로 명시적으로 지정한다
+- `entity/` 패키지 안에 위치하므로 접미사 없이도 역할이 명확하다
+
+```
+❌ OrderEntity, PaymentEntity
+✅ order/entity/Order.kt, payment/entity/Payment.kt
 ```
 
 ## ID 정책
