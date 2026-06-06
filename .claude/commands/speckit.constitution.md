@@ -37,6 +37,14 @@ Transactional Outbox Pattern, Inbox Pattern, Message Relay를
 - 단위 테스트: Service 레이어만 → `{Domain}ServiceTest.kt` (Mockk)
 - 통합 테스트: Controller 레이어만 → `{Domain}ControllerTest.kt` (Testcontainers)
 
+테스트 파일 위치 규칙: 테스트 파일은 테스트 대상 프로덕션 클래스와 동일한 서브 패키지에 위치한다.
+
+```
+order/service/OrderService.kt        → order/service/OrderServiceTest.kt
+order/controller/OrderController.kt  → order/controller/OrderControllerTest.kt
+outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
+```
+
 작성하지 않는 테스트:
 
 - RepositoryTest (JPA가 이미 검증된 라이브러리)
@@ -65,9 +73,8 @@ Transactional Outbox Pattern, Inbox Pattern, Message Relay를
 ├── controller/                  ← API 엔드포인트
 ├── service/                     ← 비즈니스 로직
 ├── repository/                  ← 데이터 접근
-├── domain/                      ← 도메인 모델
+├── domain/                      ← JPA Entity + 도메인 모델
 │   └── enums/                   ← 도메인 관련 Enum
-├── entity/                      ← JPA Entity (BaseEntity 상속)
 ├── dto/
 │   ├── request/                 ← 요청 DTO
 │   └── response/                ← 응답 DTO
@@ -80,7 +87,7 @@ Transactional Outbox Pattern, Inbox Pattern, Message Relay를
 
 ```
 common/
-├── entity/                      ← BaseEntity (공통 필드 + Soft delete)
+├── domain/                      ← BaseEntity (공통 필드 + Soft delete)
 ├── exception/                   ← 공통 예외 베이스 (BusinessException)
 ├── event/                       ← 이벤트 공통 인터페이스 (DomainEvent)
 └── dto/
@@ -91,11 +98,11 @@ common/
 
 - Entity 클래스명에 `Entity` 접미사를 붙이지 않는다
 - 테이블명은 `@Table(name = "...")`으로 명시적으로 지정한다
-- `entity/` 패키지 안에 위치하므로 접미사 없이도 역할이 명확하다
+- `domain/` 패키지 안에 위치하므로 접미사 없이도 역할이 명확하다
 
 ```
 ❌ OrderEntity, PaymentEntity
-✅ order/entity/Order.kt, payment/entity/Payment.kt
+✅ order/domain/Order.kt, payment/domain/Payment.kt
 ```
 
 ## ID 정책
@@ -116,7 +123,7 @@ val id: Long? = null
 ## Soft Delete 원칙
 
 - 모든 Entity는 Soft delete를 적용한다
-- common 패키지의 BaseEntity를 상속받아 공통 필드를 관리한다
+- `common/domain/` 패키지의 BaseEntity를 상속받아 공통 필드를 관리한다
     - `created_at`: 생성 시각
     - `updated_at`: 수정 시각
     - `deleted_at`: 삭제 시각 (null이면 유효한 데이터)
