@@ -1,26 +1,24 @@
 <!--
 ## Sync Impact Report
 
-**Version**: 1.0.0 → 1.1.0 (MINOR UPDATE)
+**Version**: 1.1.0 → 1.2.0 (MINOR UPDATE)
 
 ### Changes
-- Section I (Test-First): Added explicit `./gradlew test` gate at each TDD cycle step
-- NEW Section II (Test Scope): Defines exactly which test types to write and which to skip
-- NEW Development Standard: Entity Naming Convention (no `Entity` suffix)
-- tasks-template.md: Updated "Tests OPTIONAL" to reflect constitution mandate
+- Section II (Test Scope): Added placement rule — ServiceTest lives in `service/`, ControllerTest in `controller/`
+- Section V (Package Structure): Merged `entity/` into `domain/` — JPA entities now reside in `domain/` alongside enums
+- Section V (Package Structure): Updated `common/` structure — `entity/` renamed to `domain/`
+- Development Standard (Entity Naming Convention): Updated example paths from `entity/` to `domain/`
+- Development Standard (Soft Delete): Updated BaseEntity reference from `common/entity/` to `common/domain/`
 
 ### Modified Principles
-- I. Test-First — TDD cycle now requires explicit `./gradlew test` execution at every step
+- II. Test Scope — added placement convention (test file location mirrors production class package)
+- V. Package Structure — `entity/` sub-package eliminated; entities merged into `domain/`
 
 ### Added Sections
-- II. Test Scope — only `{Domain}ServiceTest` (Mockk) + `{Domain}ControllerTest` (Testcontainers);
-  RepositoryTest / EntityTest / DTOTest are PROHIBITED
-- Entity Naming Convention — `Entity` suffix PROHIBITED; use `order/entity/Order.kt`
+- None
 
 ### Templates Requiring Updates
-- ✅ `.specify/templates/tasks-template.md` — "Tests OPTIONAL" updated to MANDATORY
-- ✅ `.specify/templates/spec-template.md` — no structural change needed
-- ✅ `.specify/templates/plan-template.md` — no structural change needed
+- None
 
 ### Deferred Items
 - None
@@ -59,6 +57,14 @@ Only two categories of tests are written in this project. All others are PROHIBI
 |-------------|--------------------------|----------------|----------------------------------------|
 | Unit        | `{Domain}ServiceTest`    | Mockk          | Service layer isolated from Repository |
 | Integration | `{Domain}ControllerTest` | Testcontainers | Full HTTP flow with real MySQL + Kafka |
+
+**Placement rule**: Each test file MUST reside in the same sub-package as the production class it tests.
+
+```
+order/service/OrderService.kt        → order/service/OrderServiceTest.kt
+order/controller/OrderController.kt  → order/controller/OrderControllerTest.kt
+outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
+```
 
 **Tests that MUST NOT be written**:
 
@@ -111,9 +117,8 @@ Every Bounded Context MUST follow the prescribed internal package layout:
 ├── controller/                  ← API endpoints
 ├── service/                     ← business logic
 ├── repository/                  ← data access
-├── domain/                      ← domain models
+├── domain/                      ← JPA entities + domain models
 │   └── enums/                   ← domain-specific enums
-├── entity/                      ← JPA entities (extend BaseEntity)
 ├── dto/
 │   ├── request/                 ← inbound DTOs
 │   └── response/                ← outbound DTOs
@@ -125,7 +130,7 @@ Shared infrastructure MUST reside in the `common/` package:
 
 ```
 common/
-├── entity/                      ← BaseEntity (audit fields + soft delete)
+├── domain/                      ← BaseEntity (audit fields + soft delete)
 ├── exception/                   ← BusinessException base
 ├── event/                       ← DomainEvent interface
 └── dto/
@@ -164,7 +169,7 @@ extraction path.
 
 Every Entity MUST implement Soft Delete via `BaseEntity`.
 
-- MUST extend `BaseEntity` from `common/entity/`
+- MUST extend `BaseEntity` from `common/domain/`
 - `BaseEntity` MUST declare: `created_at`, `updated_at`, `deleted_at`
 - MUST annotate with `@SQLRestriction("deleted_at is null")` for transparent filtering
 - MUST annotate with `@SQLDelete(sql = "UPDATE ... SET deleted_at = now() WHERE id = ?")` to
@@ -173,12 +178,12 @@ Every Entity MUST implement Soft Delete via `BaseEntity`.
 
 ### Entity Naming Convention
 
-Entity class names MUST NOT carry an `Entity` suffix. The `entity/` package location
+Entity class names MUST NOT carry an `Entity` suffix. The `domain/` package location
 provides sufficient semantic signal.
 
 ```
 ❌  OrderEntity.kt, PaymentEntity.kt
-✅  order/entity/Order.kt, payment/entity/Payment.kt
+✅  order/domain/Order.kt, payment/domain/Payment.kt
 ```
 
 - Table names MUST be set explicitly via `@Table(name = "...")` — implicit naming is PROHIBITED
@@ -290,4 +295,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.1.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-06
+**Version**: 1.2.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
