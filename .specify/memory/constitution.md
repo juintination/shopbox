@@ -1,18 +1,16 @@
 <!--
 ## Sync Impact Report
 
-**Version**: 1.1.0 → 1.2.0 (MINOR UPDATE)
+**Version**: 1.2.0 → 1.3.0 (MINOR UPDATE)
 
 ### Changes
-- Section II (Test Scope): Added placement rule — ServiceTest lives in `service/`, ControllerTest in `controller/`
-- Section V (Package Structure): Merged `entity/` into `domain/` — JPA entities now reside in `domain/` alongside enums
-- Section V (Package Structure): Updated `common/` structure — `entity/` renamed to `domain/`
-- Development Standard (Entity Naming Convention): Updated example paths from `entity/` to `domain/`
-- Development Standard (Soft Delete): Updated BaseEntity reference from `common/entity/` to `common/domain/`
+- Section V (Package Structure): Renamed `domain/` back to `entity/` — JPA entities reside in `entity/`
+- Section V (Package Structure): Updated `common/` structure — `domain/` renamed to `entity/`
+- Development Standard (Entity Naming Convention): Updated example paths from `domain/` to `entity/`
+- Development Standard (Soft Delete): Updated BaseEntity reference from `common/domain/` to `common/entity/`
 
 ### Modified Principles
-- II. Test Scope — added placement convention (test file location mirrors production class package)
-- V. Package Structure — `entity/` sub-package eliminated; entities merged into `domain/`
+- V. Package Structure — `domain/` renamed to `entity/` across all Bounded Contexts and common package
 
 ### Added Sections
 - None
@@ -117,7 +115,7 @@ Every Bounded Context MUST follow the prescribed internal package layout:
 ├── controller/                  ← API endpoints
 ├── service/                     ← business logic
 ├── repository/                  ← data access
-├── domain/                      ← JPA entities + domain models
+├── entity/                      ← JPA entities + domain models
 │   └── enums/                   ← domain-specific enums
 ├── dto/
 │   ├── request/                 ← inbound DTOs
@@ -130,14 +128,14 @@ Shared infrastructure MUST reside in the `common/` package:
 
 ```
 common/
-├── domain/                      ← BaseEntity (audit fields + soft delete)
+├── entity/                      ← BaseEntity (audit fields + soft delete)
 ├── exception/                   ← BusinessException base
 ├── event/                       ← DomainEvent interface
 └── dto/
     └── response/                ← ApiResponse wrapper
 ```
 
-- Entity ↔ Domain and Entity ↔ DTO conversions MUST use `from()` / `of()` static methods.
+- Entity ↔ DTO conversions MUST use `from()` / `of()` static methods.
   Dedicated mapper classes are PROHIBITED.
 - Introducing a cross-context direct dependency requires explicit justification and a
   migration plan toward event-based communication.
@@ -169,7 +167,7 @@ extraction path.
 
 Every Entity MUST implement Soft Delete via `BaseEntity`.
 
-- MUST extend `BaseEntity` from `common/domain/`
+- MUST extend `BaseEntity` from `common/entity/`
 - `BaseEntity` MUST declare: `created_at`, `updated_at`, `deleted_at`
 - MUST annotate with `@SQLRestriction("deleted_at is null")` for transparent filtering
 - MUST annotate with `@SQLDelete(sql = "UPDATE ... SET deleted_at = now() WHERE id = ?")` to
@@ -178,12 +176,12 @@ Every Entity MUST implement Soft Delete via `BaseEntity`.
 
 ### Entity Naming Convention
 
-Entity class names MUST NOT carry an `Entity` suffix. The `domain/` package location
+Entity class names MUST NOT carry an `Entity` suffix. The `entity/` package location
 provides sufficient semantic signal.
 
 ```
 ❌  OrderEntity.kt, PaymentEntity.kt
-✅  order/domain/Order.kt, payment/domain/Payment.kt
+✅  order/entity/Order.kt, payment/entity/Payment.kt
 ```
 
 - Table names MUST be set explicitly via `@Table(name = "...")` — implicit naming is PROHIBITED
@@ -295,4 +293,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.2.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
+**Version**: 1.3.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
