@@ -73,7 +73,7 @@ outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
 ├── controller/                  ← API 엔드포인트
 ├── service/                     ← 비즈니스 로직
 ├── repository/                  ← 데이터 접근
-├── domain/                      ← JPA Entity + 도메인 모델
+├── entity/                      ← JPA Entity + 도메인 모델
 │   └── enums/                   ← 도메인 관련 Enum
 ├── dto/
 │   ├── request/                 ← 요청 DTO
@@ -82,12 +82,12 @@ outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
 └── exception/                   ← Context 전용 예외
 ```
 
-- Entity ↔ Domain, Entity ↔ DTO 변환은 별도 mapper 클래스 없이 `from()` / `of()` 정적 메서드를 사용한다
+- Entity ↔ DTO 변환은 별도 mapper 클래스 없이 `from()` / `of()` 정적 메서드를 사용한다
 - 공통 요소는 common 패키지에서 관리한다:
 
 ```
 common/
-├── domain/                      ← BaseEntity (공통 필드 + Soft delete)
+├── entity/                      ← BaseEntity (공통 필드 + Soft delete)
 ├── exception/                   ← 공통 예외 베이스 (BusinessException)
 ├── event/                       ← 이벤트 공통 인터페이스 (DomainEvent)
 └── dto/
@@ -98,11 +98,11 @@ common/
 
 - Entity 클래스명에 `Entity` 접미사를 붙이지 않는다
 - 테이블명은 `@Table(name = "...")`으로 명시적으로 지정한다
-- `domain/` 패키지 안에 위치하므로 접미사 없이도 역할이 명확하다
+- `entity/` 패키지 안에 위치하므로 접미사 없이도 역할이 명확하다
 
 ```
 ❌ OrderEntity, PaymentEntity
-✅ order/domain/Order.kt, payment/domain/Payment.kt
+✅ order/entity/Order.kt, payment/entity/Payment.kt
 ```
 
 ## ID 정책
@@ -123,7 +123,7 @@ val id: Long? = null
 ## Soft Delete 원칙
 
 - 모든 Entity는 Soft delete를 적용한다
-- `common/domain/` 패키지의 BaseEntity를 상속받아 공통 필드를 관리한다
+- `common/entity/` 패키지의 BaseEntity를 상속받아 공통 필드를 관리한다
     - `created_at`: 생성 시각
     - `updated_at`: 수정 시각
     - `deleted_at`: 삭제 시각 (null이면 유효한 데이터)
