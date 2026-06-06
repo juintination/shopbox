@@ -1,26 +1,26 @@
 <!--
 ## Sync Impact Report
 
-**Version**: N/A → 1.0.0 (INITIAL CREATION)
+**Version**: 1.0.0 → 1.1.0 (MINOR UPDATE)
 
 ### Changes
-- Initial constitution created from project principles
+- Section I (Test-First): Added explicit `./gradlew test` gate at each TDD cycle step
+- NEW Section II (Test Scope): Defines exactly which test types to write and which to skip
+- NEW Development Standard: Entity Naming Convention (no `Entity` suffix)
+- tasks-template.md: Updated "Tests OPTIONAL" to reflect constitution mandate
 
 ### Modified Principles
-- None (initial creation)
+- I. Test-First — TDD cycle now requires explicit `./gradlew test` execution at every step
 
 ### Added Sections
-- Core Principles: I. Test-First, II. DDD Architecture, III. Outbox/Inbox/Relay,
-  IV. Package Structure, V. ID Policy
-- Development Standards: Soft Delete, Code Quality, Coding Convention, Input Validation
-- Technology Stack
-- Governance
+- II. Test Scope — only `{Domain}ServiceTest` (Mockk) + `{Domain}ControllerTest` (Testcontainers);
+  RepositoryTest / EntityTest / DTOTest are PROHIBITED
+- Entity Naming Convention — `Entity` suffix PROHIBITED; use `order/entity/Order.kt`
 
 ### Templates Requiring Updates
-- ✅ `.specify/templates/plan-template.md` — Constitution Check section references TDD + architecture gates; no structural change needed
-- ✅ `.specify/templates/spec-template.md` — User story / Given-When-Then format aligns with constitution
-- ⚠️ `.specify/templates/tasks-template.md` — Template marks tests as OPTIONAL; constitution mandates TDD.
-  Note: The tasks template is a generic speckit template. Per this constitution, test tasks are ALWAYS required.
+- ✅ `.specify/templates/tasks-template.md` — "Tests OPTIONAL" updated to MANDATORY
+- ✅ `.specify/templates/spec-template.md` — no structural change needed
+- ✅ `.specify/templates/plan-template.md` — no structural change needed
 
 ### Deferred Items
 - None
@@ -35,9 +35,15 @@
 TDD MUST be strictly applied throughout this project. No production code MAY be written
 without a failing test that justifies its existence.
 
-- The Red → Green → Refactor cycle MUST be explicitly maintained on every change
-- Unit tests MUST use Mockk to isolate the Service layer from its Repositories
-- Integration tests MUST use Testcontainers to spin up real MySQL and Kafka instances
+The Red → Green → Refactor cycle MUST be explicitly maintained on every task:
+
+1. 🔴 **Red**: Write the test → run `./gradlew test` → confirm it FAILS
+2. 🟢 **Green**: Write the minimum implementation → run `./gradlew test` → confirm it PASSES
+3. 🔵 **Refactor**: Clean up → run `./gradlew test` → confirm it still PASSES
+
+- Advancing to the next step WITHOUT running `./gradlew test` is PROHIBITED
+- Advancing to Green without a confirmed failing Red test is PROHIBITED
+- Advancing to the next task without a passing Green is PROHIBITED
 - Test names MUST follow **Given / When / Then** format to clearly express the scenario
 - Test coverage MUST exist for all production code — untested code MUST NOT be merged
 
@@ -45,7 +51,26 @@ without a failing test that justifies its existence.
 behavior through tests. A green test suite that was not written test-first does not
 fulfill the learning goal.
 
-### II. DDD Bounded Context Architecture
+### II. Test Scope
+
+Only two categories of tests are written in this project. All others are PROHIBITED.
+
+| Category    | Class Name               | Tool           | What it covers                         |
+|-------------|--------------------------|----------------|----------------------------------------|
+| Unit        | `{Domain}ServiceTest`    | Mockk          | Service layer isolated from Repository |
+| Integration | `{Domain}ControllerTest` | Testcontainers | Full HTTP flow with real MySQL + Kafka |
+
+**Tests that MUST NOT be written**:
+
+- `RepositoryTest` — Spring Data JPA is an already-verified library
+- `EntityTest` — Entity structure is verified via integration tests
+- `DTOTest` — DTO logic is covered by ServiceTest or ControllerTest
+- Any other granular unit test outside the Service layer
+
+**Rationale**: Over-testing peripheral layers adds maintenance cost without learning value.
+The Service layer carries all business logic; the Controller layer covers end-to-end behavior.
+
+### III. DDD Bounded Context Architecture
 
 The system MUST be structured around DDD Bounded Contexts with a layered architecture
 inside each context.
@@ -53,15 +78,15 @@ inside each context.
 - Four Bounded Contexts: **Order**, **Payment**, **Inventory**, **Delivery**
 - Each context MUST follow the layer sequence: Controller → Service → Repository
 - Layer responsibilities (non-negotiable):
-  - **Controller**: request/response handling ONLY — no business logic
-  - **Service**: business logic + transaction management
-  - **Repository**: data access via Spring Data JPA
+    - **Controller**: request/response handling ONLY — no business logic
+    - **Service**: business logic + transaction management
+    - **Repository**: data access via Spring Data JPA
 - Inter-context communication MUST use Kafka events exclusively — direct package
   references across context boundaries are PROHIBITED
 - Each context MUST be structured so it can be extracted as an independent service
   without structural rework
 
-### III. Transactional Outbox / Inbox / Message Relay
+### IV. Transactional Outbox / Inbox / Message Relay
 
 Messaging pattern guarantees MUST be upheld without exception.
 
@@ -77,7 +102,7 @@ Messaging pattern guarantees MUST be upheld without exception.
 core guarantees (atomicity, idempotency, at-least-once delivery) defeats the purpose of
 implementing them.
 
-### IV. Package Structure
+### V. Package Structure
 
 Every Bounded Context MUST follow the prescribed internal package layout:
 
@@ -112,7 +137,7 @@ common/
 - Introducing a cross-context direct dependency requires explicit justification and a
   migration plan toward event-based communication.
 
-### V. ID Policy (TSID)
+### VI. ID Policy (TSID)
 
 All Entity primary keys MUST use TSID (Time-Sorted ID).
 
@@ -131,6 +156,8 @@ val id: Long? = null
 collision-free in distributed environments — a requirement for the eventual multi-service
 extraction path.
 
+---
+
 ## Development Standards
 
 ### Soft Delete
@@ -141,8 +168,22 @@ Every Entity MUST implement Soft Delete via `BaseEntity`.
 - `BaseEntity` MUST declare: `created_at`, `updated_at`, `deleted_at`
 - MUST annotate with `@SQLRestriction("deleted_at is null")` for transparent filtering
 - MUST annotate with `@SQLDelete(sql = "UPDATE ... SET deleted_at = now() WHERE id = ?")` to
-  intercept hard deletes
-- `deleted_at` MUST have a single-column index
+  intercept hard deletes — MUST be declared on each concrete entity (NOT on `BaseEntity`)
+- `deleted_at` MUST have a single-column index declared via `@Table(indexes = [Index(...)])`
+
+### Entity Naming Convention
+
+Entity class names MUST NOT carry an `Entity` suffix. The `entity/` package location
+provides sufficient semantic signal.
+
+```
+❌  OrderEntity.kt, PaymentEntity.kt
+✅  order/entity/Order.kt, payment/entity/Payment.kt
+```
+
+- Table names MUST be set explicitly via `@Table(name = "...")` — implicit naming is PROHIBITED
+- Outbox/Inbox operational tables are exempt from `BaseEntity` inheritance (append-only;
+  `@SQLRestriction` would interfere with relay and idempotency queries)
 
 ### Code Quality
 
@@ -198,20 +239,22 @@ data class CreateOrderRequest(
 )
 ```
 
+---
+
 ## Technology Stack
 
-| Layer | Technology |
-|---|---|
-| Language | Kotlin 2.x |
-| Framework | Spring Boot 3.x |
-| Database | MySQL |
-| Message Broker | Kafka |
-| ORM | Spring Data JPA |
-| Kafka Client | spring-kafka |
-| Test Framework | Kotest (BehaviorSpec) |
-| Mocking | Mockk |
-| Integration Testing | Testcontainers |
-| ID Generation | io.hypersistence:hypersistence-utils (TSID) |
+| Layer               | Technology                                  |
+|---------------------|---------------------------------------------|
+| Language            | Kotlin 2.x                                  |
+| Framework           | Spring Boot 3.x                             |
+| Database            | MySQL                                       |
+| Message Broker      | Kafka                                       |
+| ORM                 | Spring Data JPA                             |
+| Kafka Client        | spring-kafka                                |
+| Test Framework      | Kotest (BehaviorSpec)                       |
+| Mocking             | Mockk                                       |
+| Integration Testing | Testcontainers                              |
+| ID Generation       | io.hypersistence:hypersistence-utils (TSID) |
 
 **Project topology** — single module, context boundaries enforced by package:
 
@@ -228,6 +271,8 @@ src/main/kotlin/
 Strict package discipline MUST be maintained so the structure can be split into a
 multi-module or multi-service layout without restructuring.
 
+---
+
 ## Governance
 
 This Constitution supersedes all other practices and guidelines. Amendments require
@@ -240,9 +285,9 @@ documented rationale and explicit agreement.
 - Package boundary violations require a documented migration plan toward event-based
   communication before the violation is permitted
 - Version policy:
-  - **MAJOR**: backward-incompatible governance change or principle removal/redefinition
-  - **MINOR**: new principle or section added, or guidance materially expanded
-  - **PATCH**: clarifications, wording fixes, non-semantic refinements
+    - **MAJOR**: backward-incompatible governance change or principle removal/redefinition
+    - **MINOR**: new principle or section added, or guidance materially expanded
+    - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
 **Version**: 1.0.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-06
