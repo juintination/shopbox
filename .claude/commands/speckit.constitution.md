@@ -178,11 +178,67 @@ src/main/kotlin/
 - 각 클래스/함수는 단일 책임에 집중한다
 - Saga의 보상 트랜잭션은 당장 구현하지 않더라도 처음부터 설계에 반영해둔다
 
+## Entity 생성 원칙
+
+- 모든 Entity는 `private constructor`로 외부에서 임의 생성을 금지한다
+- 생성 진입점은 반드시 `companion object`의 `create()` 팩토리 메서드 하나뿐이다
+- `create()` 내부에서만 생성자를 호출하므로, 불변식(invariant) 검증도 이 메서드에서 수행한다
+
+```kotlin
+class Order private constructor(
+    val id: Long? = null,
+    val userId: Long,
+    ...
+) : BaseEntity() {
+    companion object {
+        fun create(
+            userId: Long,
+            ...
+        ) = Order(
+            userId = userId,
+            ...
+        )
+    }
+}
+```
+
+- `kotlin("plugin.jpa")`가 Hibernate용 no-arg 생성자를 자동 생성하므로 `private constructor`와 충돌하지 않는다
+
+## 테스트 픽스처 원칙
+
+- `private constructor`가 적용된 Entity는 테스트 코드에서 직접 생성할 수 없다
+- 단위 테스트에서 임의의 Entity 상태가 필요할 때는 **Fixture Monkey**를 사용한다
+- Fixture Monkey는 리플렉션으로 `private constructor`를 우회해 자유롭게 필드 값을 설정한다
+- `KotlinPlugin()`을 반드시 등록하고, `giveMeKotlinBuilder<T>()`로 빌더를 생성한다
+
+```kotlin
+val fixtureMonkey = FixtureMonkey.builder()
+    .plugin(KotlinPlugin())
+    .build()
+
+// id처럼 nullable인 필드는 명시적으로 set해야 !! 호출 시 NPE를 방지할 수 있다
+val order = fixtureMonkey.giveMeKotlinBuilder<Order>()
+    .set(Order::id, 1L)
+    .sample()
+```
+
+- `giveMeBuilder` 대신 `giveMeKotlinBuilder`를 사용한다 — Kotlin 프로퍼티 참조(`KProperty1`)를 올바르게 처리한다
+
 ## 코딩 컨벤션
 
 - 모든 함수/생성자의 파라미터는 항상 줄바꿈하여 선언한다 (파라미터가 1개여도 동일하게 적용)
 - 함수 호출 시에도 파라미터는 항상 줄바꿈하여 전달한다
 - trailing comma를 항상 사용한다
+- 표현식 본문 함수(`= ...`)에서 반환 타입이 우변으로부터 명확히 추론 가능하면 반환 타입 선언을 생략한다. `override` 함수는 인터페이스 계약을 명시하므로 예외로 유지한다:
+
+```kotlin
+// ❌ 중복
+fun create(orderId: Long): Delivery = Delivery(orderId = orderId)
+
+// ✅ 추론 가능하므로 생략
+fun create(orderId: Long) = Delivery(orderId = orderId)
+```
+
 - 문자열 리터럴을 코드 여러 곳에서 참조하는 경우 반드시 상수로 추출한다. 이벤트 타입명, 에러 메시지 등이 대표적인 대상이다:
 
 ```kotlin
