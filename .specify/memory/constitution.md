@@ -1,16 +1,16 @@
 <!--
 ## Sync Impact Report
 
-**Version**: 1.2.0 → 1.3.0 (MINOR UPDATE)
+**Version**: 1.3.0 → 1.4.0 (MINOR UPDATE)
 
 ### Changes
-- Section V (Package Structure): Renamed `domain/` back to `entity/` — JPA entities reside in `entity/`
-- Section V (Package Structure): Updated `common/` structure — `domain/` renamed to `entity/`
-- Development Standard (Entity Naming Convention): Updated example paths from `domain/` to `entity/`
-- Development Standard (Soft Delete): Updated BaseEntity reference from `common/domain/` to `common/entity/`
+- Section III (Architecture): Service layer MUST return DTOs — Entity return is PROHIBITED to prevent persistence context leaks
+- Section VI (ID Policy): `UUID.randomUUID()` PROHIBITED — use `TSID.fast().toString()` everywhere an ID string is needed
+- Development Standard (Coding Convention): String literals referenced in multiple places MUST be extracted to `companion object` constants
 
 ### Modified Principles
-- V. Package Structure — `domain/` renamed to `entity/` across all Bounded Contexts and common package
+- III. DDD Bounded Context Architecture — Service return type constraint added
+- VI. ID Policy — UUID prohibition added; TSID usage extended beyond PKs
 
 ### Added Sections
 - None
@@ -83,8 +83,11 @@ inside each context.
 - Each context MUST follow the layer sequence: Controller → Service → Repository
 - Layer responsibilities (non-negotiable):
     - **Controller**: request/response handling ONLY — no business logic
-    - **Service**: business logic + transaction management
+    - **Service**: business logic + transaction management — MUST return DTOs, NEVER Entities
     - **Repository**: data access via Spring Data JPA
+- Returning an Entity from a Service leaks the persistence context into the Controller layer,
+  risking `LazyInitializationException` or unintended additional queries. Entity-to-DTO
+  conversion MUST happen inside the transaction boundary before returning.
 - Inter-context communication MUST use Kafka events exclusively — direct package
   references across context boundaries are PROHIBITED
 - Each context MUST be structured so it can be extracted as an independent service
@@ -155,9 +158,15 @@ All Entity primary keys MUST use TSID (Time-Sorted ID).
 val id: Long? = null
 ```
 
+- `UUID.randomUUID()` is PROHIBITED anywhere in the codebase — use `TSID.fast().toString()`
+  wherever a string ID is needed (event IDs, correlation IDs, etc.)
+- `io.hypersistence.tsid.TSID` is bundled in the existing `hypersistence-utils` dependency —
+  no additional dependency required
+
 **Rationale**: TSID provides monotonically increasing, time-sortable IDs that remain
 collision-free in distributed environments — a requirement for the eventual multi-service
-extraction path.
+extraction path. Using TSID everywhere keeps the ID strategy consistent across Entities
+and domain events.
 
 ---
 
@@ -201,6 +210,20 @@ provides sufficient semantic signal.
 
 All function and constructor parameters MUST be declared one-per-line, including
 single-parameter signatures. Trailing commas are MANDATORY.
+
+String literals referenced in more than one place MUST be extracted to `companion object`
+constants. Event type names, fixed error messages, and topic names are canonical examples.
+
+```kotlin
+// PROHIBITED — hardcoded string at usage site
+eventType = "OrderCreated"
+
+// REQUIRED — constant owns the string, usages reference it
+companion object {
+    const val EVENT_TYPE = "OrderCreated"
+}
+eventType = EVENT_TYPE
+```
 
 ```kotlin
 // Declaration
@@ -293,4 +316,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.3.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
+**Version**: 1.4.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
