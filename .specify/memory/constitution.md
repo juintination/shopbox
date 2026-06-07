@@ -1,19 +1,19 @@
 <!--
 ## Sync Impact Report
 
-**Version**: 1.3.0 → 1.4.0 (MINOR UPDATE)
+**Version**: 1.4.0 → 1.5.0 (MINOR UPDATE)
 
 ### Changes
-- Section III (Architecture): Service layer MUST return DTOs — Entity return is PROHIBITED to prevent persistence context leaks
-- Section VI (ID Policy): `UUID.randomUUID()` PROHIBITED — use `TSID.fast().toString()` everywhere an ID string is needed
-- Development Standard (Coding Convention): String literals referenced in multiple places MUST be extracted to `companion object` constants
+- Entity Creation: All Entities MUST use `private constructor`; `create()` factory method in `companion object` is the sole external entry point
+- Test Fixture: Fixture Monkey with `KotlinPlugin` + `giveMeKotlinBuilder` REQUIRED for unit tests needing arbitrary Entity state
+- Coding Convention: Expression body function return types MUST be omitted when inferable from the RHS (`override` functions excepted)
 
 ### Modified Principles
-- III. DDD Bounded Context Architecture — Service return type constraint added
-- VI. ID Policy — UUID prohibition added; TSID usage extended beyond PKs
+- Development Standard (Coding Convention) — expression body return type omission rule added
 
 ### Added Sections
-- None
+- Entity 생성 원칙 / Entity Creation Principle
+- 테스트 픽스처 원칙 / Test Fixture Principle
 
 ### Templates Requiring Updates
 - None
@@ -316,4 +316,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.4.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
+**Version**: 1.5.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
