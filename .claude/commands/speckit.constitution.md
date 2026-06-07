@@ -61,8 +61,9 @@ outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
 - 각 Context는 추후 독립적인 서비스로 분리 가능한 구조를 갖춰야 한다
 - 각 레이어의 책임:
     - Controller: 요청/응답 처리만 담당
-    - Service: 비즈니스 로직 + 트랜잭션 관리
+    - Service: 비즈니스 로직 + 트랜잭션 관리, **반드시 DTO를 반환한다 (Entity 반환 금지)**
     - Repository: 데이터 접근 (Spring Data JPA 직접 사용)
+- Service가 Entity를 반환하면 영속성 컨텍스트가 Controller까지 누수되어 예상치 못한 LazyInitializationException 또는 추가 쿼리가 발생할 수 있다. 트랜잭션 경계 안에서 DTO로 변환한 뒤 반환한다
 
 ## 패키지 구조 원칙
 
@@ -119,6 +120,9 @@ common/
 @Column(columnDefinition = "BIGINT UNSIGNED")
 val id: Long? = null
 ```
+
+- UUID가 필요한 모든 곳(이벤트 ID 등)에서 `UUID.randomUUID()` 대신 `TSID.fast().toString()`을 사용한다 — 시간순 정렬이 가능하고 프로젝트 전체의 ID 전략이 일관된다
+- `io.hypersistence.tsid.TSID` 클래스는 `hypersistence-utils` 의존성에 번들로 포함되어 있어 별도 추가 없이 사용 가능하다
 
 ## Soft Delete 원칙
 
@@ -179,6 +183,24 @@ src/main/kotlin/
 - 모든 함수/생성자의 파라미터는 항상 줄바꿈하여 선언한다 (파라미터가 1개여도 동일하게 적용)
 - 함수 호출 시에도 파라미터는 항상 줄바꿈하여 전달한다
 - trailing comma를 항상 사용한다
+- 문자열 리터럴을 코드 여러 곳에서 참조하는 경우 반드시 상수로 추출한다. 이벤트 타입명, 에러 메시지 등이 대표적인 대상이다:
+
+```kotlin
+// ❌ 하드코딩
+eventType = "OrderCreated"
+ApiResponse.error("서버 내부 오류가 발생했습니다")
+
+// ✅ 상수 추출
+companion object {
+    const val EVENT_TYPE = "OrderCreated"
+}
+eventType = EVENT_TYPE
+
+companion object {
+    private const val INTERNAL_SERVER_ERROR_MESSAGE = "서버 내부 오류가 발생했습니다"
+}
+ApiResponse.error(INTERNAL_SERVER_ERROR_MESSAGE)
+```
 
 ```kotlin
 // 선언
