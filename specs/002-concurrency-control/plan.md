@@ -12,7 +12,7 @@
 | Key | Value |
 |-----|-------|
 | Language/Version | Kotlin 2.x (JVM 21) |
-| Primary Dependencies | Spring Boot 3.5.x, Spring Data JPA, `redisson-spring-boot-starter:3.27.2`, Kotest, Mockk, Fixture Monkey, Testcontainers (MySQL + Redis) |
+| Primary Dependencies | Spring Boot 3.5.x, Spring Data JPA, `redisson-spring-boot-starter:4.5.0`, Kotest, Mockk, Fixture Monkey, Testcontainers (MySQL + Redis) |
 | Storage | MySQL (기존) + Redis (분산락, 신규) |
 | Testing | Kotest BehaviorSpec + Mockk (단위) + Testcontainers (동시성·성능 통합) |
 | Target Platform | JVM Spring Boot 단일 모듈 |

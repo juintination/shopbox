@@ -193,11 +193,11 @@ stockRepository.findByProductId(productId)!!.quantity shouldBe 0
 **Additions to `build.gradle.kts`**:
 
 ```kotlin
-implementation("org.redisson:redisson-spring-boot-starter:3.27.2")
+implementation("org.redisson:redisson-spring-boot-starter:4.5.0")
 testImplementation("org.testcontainers:redis:1.20.4")
 ```
 
 **Notes**:
 - `redisson-spring-boot-starter`는 `redissonClient` 빈을 자동 구성한다. `application.yml`의 `spring.data.redis.*` 설정을 읽는다.
 - `testcontainers:redis`는 `RedisContainer`를 제공한다. 이미 포함된 `spring-boot-testcontainers`와 함께 사용한다.
-- 버전은 Spring Boot 3.5.x 호환 여부를 Maven Central에서 확인 후 업데이트할 것.
+- Redisson 4.x는 3.x 대비 주요 변경 사항이 있을 수 있으므로 마이그레이션 가이드 확인 권장 (https://github.com/redisson/redisson/wiki).
