@@ -1,26 +1,22 @@
 <!--
 ## Sync Impact Report
 
-**Version**: 1.0.0 → 1.1.0 (MINOR UPDATE)
+**Version**: 1.4.0 → 1.5.0 (MINOR UPDATE)
 
 ### Changes
-- Section I (Test-First): Added explicit `./gradlew test` gate at each TDD cycle step
-- NEW Section II (Test Scope): Defines exactly which test types to write and which to skip
-- NEW Development Standard: Entity Naming Convention (no `Entity` suffix)
-- tasks-template.md: Updated "Tests OPTIONAL" to reflect constitution mandate
+- Entity Creation: All Entities MUST use `private constructor`; `create()` factory method in `companion object` is the sole external entry point
+- Test Fixture: Fixture Monkey with `KotlinPlugin` + `giveMeKotlinBuilder` REQUIRED for unit tests needing arbitrary Entity state
+- Coding Convention: Expression body function return types MUST be omitted when inferable from the RHS (`override` functions excepted)
 
 ### Modified Principles
-- I. Test-First — TDD cycle now requires explicit `./gradlew test` execution at every step
+- Development Standard (Coding Convention) — expression body return type omission rule added
 
 ### Added Sections
-- II. Test Scope — only `{Domain}ServiceTest` (Mockk) + `{Domain}ControllerTest` (Testcontainers);
-  RepositoryTest / EntityTest / DTOTest are PROHIBITED
-- Entity Naming Convention — `Entity` suffix PROHIBITED; use `order/entity/Order.kt`
+- Entity 생성 원칙 / Entity Creation Principle
+- 테스트 픽스처 원칙 / Test Fixture Principle
 
 ### Templates Requiring Updates
-- ✅ `.specify/templates/tasks-template.md` — "Tests OPTIONAL" updated to MANDATORY
-- ✅ `.specify/templates/spec-template.md` — no structural change needed
-- ✅ `.specify/templates/plan-template.md` — no structural change needed
+- None
 
 ### Deferred Items
 - None
@@ -60,6 +56,14 @@ Only two categories of tests are written in this project. All others are PROHIBI
 | Unit        | `{Domain}ServiceTest`    | Mockk          | Service layer isolated from Repository |
 | Integration | `{Domain}ControllerTest` | Testcontainers | Full HTTP flow with real MySQL + Kafka |
 
+**Placement rule**: Each test file MUST reside in the same sub-package as the production class it tests.
+
+```
+order/service/OrderService.kt        → order/service/OrderServiceTest.kt
+order/controller/OrderController.kt  → order/controller/OrderControllerTest.kt
+outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
+```
+
 **Tests that MUST NOT be written**:
 
 - `RepositoryTest` — Spring Data JPA is an already-verified library
@@ -79,8 +83,11 @@ inside each context.
 - Each context MUST follow the layer sequence: Controller → Service → Repository
 - Layer responsibilities (non-negotiable):
     - **Controller**: request/response handling ONLY — no business logic
-    - **Service**: business logic + transaction management
+    - **Service**: business logic + transaction management — MUST return DTOs, NEVER Entities
     - **Repository**: data access via Spring Data JPA
+- Returning an Entity from a Service leaks the persistence context into the Controller layer,
+  risking `LazyInitializationException` or unintended additional queries. Entity-to-DTO
+  conversion MUST happen inside the transaction boundary before returning.
 - Inter-context communication MUST use Kafka events exclusively — direct package
   references across context boundaries are PROHIBITED
 - Each context MUST be structured so it can be extracted as an independent service
@@ -111,9 +118,8 @@ Every Bounded Context MUST follow the prescribed internal package layout:
 ├── controller/                  ← API endpoints
 ├── service/                     ← business logic
 ├── repository/                  ← data access
-├── domain/                      ← domain models
+├── entity/                      ← JPA entities + domain models
 │   └── enums/                   ← domain-specific enums
-├── entity/                      ← JPA entities (extend BaseEntity)
 ├── dto/
 │   ├── request/                 ← inbound DTOs
 │   └── response/                ← outbound DTOs
@@ -132,7 +138,7 @@ common/
     └── response/                ← ApiResponse wrapper
 ```
 
-- Entity ↔ Domain and Entity ↔ DTO conversions MUST use `from()` / `of()` static methods.
+- Entity ↔ DTO conversions MUST use `from()` / `of()` static methods.
   Dedicated mapper classes are PROHIBITED.
 - Introducing a cross-context direct dependency requires explicit justification and a
   migration plan toward event-based communication.
@@ -152,9 +158,15 @@ All Entity primary keys MUST use TSID (Time-Sorted ID).
 val id: Long? = null
 ```
 
+- `UUID.randomUUID()` is PROHIBITED anywhere in the codebase — use `TSID.fast().toString()`
+  wherever a string ID is needed (event IDs, correlation IDs, etc.)
+- `io.hypersistence.tsid.TSID` is bundled in the existing `hypersistence-utils` dependency —
+  no additional dependency required
+
 **Rationale**: TSID provides monotonically increasing, time-sortable IDs that remain
 collision-free in distributed environments — a requirement for the eventual multi-service
-extraction path.
+extraction path. Using TSID everywhere keeps the ID strategy consistent across Entities
+and domain events.
 
 ---
 
@@ -198,6 +210,20 @@ provides sufficient semantic signal.
 
 All function and constructor parameters MUST be declared one-per-line, including
 single-parameter signatures. Trailing commas are MANDATORY.
+
+String literals referenced in more than one place MUST be extracted to `companion object`
+constants. Event type names, fixed error messages, and topic names are canonical examples.
+
+```kotlin
+// PROHIBITED — hardcoded string at usage site
+eventType = "OrderCreated"
+
+// REQUIRED — constant owns the string, usages reference it
+companion object {
+    const val EVENT_TYPE = "OrderCreated"
+}
+eventType = EVENT_TYPE
+```
 
 ```kotlin
 // Declaration
@@ -290,4 +316,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-06
+**Version**: 1.5.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
