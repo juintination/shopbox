@@ -19,9 +19,9 @@
 
 **Purpose**: 빌드 의존성·설정 파일 준비 — 이후 모든 Phase의 전제 조건
 
-- [ ] T001 Add missing dependencies to `build.gradle.kts`: `spring-kafka`, `kotest-runner-junit5:5.9.1`, `kotest-extensions-spring:1.3.0`, `mockk:1.13.17`, `spring-boot-testcontainers`, `testcontainers:kafka`, `testcontainers:mysql`
-- [ ] T002 [P] Add Kafka consumer/producer config and `outbox.relay.interval` property to `src/main/resources/application.yaml`
-- [ ] T003 [P] Create Testcontainers base config `src/test/kotlin/com/example/shopbox/TestContainersConfig.kt` — shared `@SpringBootTest` parent with MySQL + Kafka containers
+- [x] T001 Add missing dependencies to `build.gradle.kts`: `spring-kafka`, `kotest-runner-junit5:5.9.1`, `kotest-extensions-spring:1.3.0`, `mockk:1.13.17`, `spring-boot-testcontainers`, `testcontainers:kafka`, `testcontainers:mysql`
+- [x] T002 [P] Add Kafka consumer/producer config and `outbox.relay.interval` property to `src/main/resources/application.yaml`
+- [x] T003 [P] Create Testcontainers base config `src/test/kotlin/com/example/shopbox/TestContainersConfig.kt` — shared `@SpringBootTest` parent with MySQL + Kafka containers
 
 ---
 
@@ -31,12 +31,12 @@
 
 **⚠️ CRITICAL**: 이 Phase가 끝나기 전까지 어떤 User Story도 시작 불가
 
-- [ ] T004 Create `src/main/kotlin/com/example/shopbox/common/entity/BaseEntity.kt` with `createdAt`, `updatedAt`, `deletedAt` fields (`@MappedSuperclass`)
-- [ ] T005 [P] Create `src/main/kotlin/com/example/shopbox/common/event/DomainEvent.kt` interface with `eventId`, `eventType`, `occurredAt`
-- [ ] T006 [P] Create `src/main/kotlin/com/example/shopbox/common/dto/response/ApiResponse.kt` wrapper
-- [ ] T007 [P] Create `src/main/kotlin/com/example/shopbox/common/exception/BusinessException.kt` and `GlobalExceptionHandler.kt` with `@RestControllerAdvice`
-- [ ] T008 Create `src/main/kotlin/com/example/shopbox/outbox/entity/OutboxEvent.kt` and `src/main/kotlin/com/example/shopbox/outbox/repository/OutboxEventRepository.kt` (append-only, no BaseEntity)
-- [ ] T009 [P] Create `src/main/kotlin/com/example/shopbox/inbox/entity/InboxEvent.kt` and `src/main/kotlin/com/example/shopbox/inbox/repository/InboxEventRepository.kt` (PK = `messageId`, append-only)
+- [x] T004 Create `src/main/kotlin/com/example/shopbox/common/entity/BaseEntity.kt` with `createdAt`, `updatedAt`, `deletedAt` fields (`@MappedSuperclass`)
+- [x] T005 [P] Create `src/main/kotlin/com/example/shopbox/common/event/DomainEvent.kt` interface with `eventId`, `eventType`, `occurredAt`
+- [x] T006 [P] Create `src/main/kotlin/com/example/shopbox/common/dto/response/ApiResponse.kt` wrapper
+- [x] T007 [P] Create `src/main/kotlin/com/example/shopbox/common/exception/BusinessException.kt` and `GlobalExceptionHandler.kt` with `@RestControllerAdvice`
+- [x] T008 Create `src/main/kotlin/com/example/shopbox/outbox/entity/OutboxEvent.kt` and `src/main/kotlin/com/example/shopbox/outbox/repository/OutboxEventRepository.kt` (append-only, no BaseEntity)
+- [x] T009 [P] Create `src/main/kotlin/com/example/shopbox/inbox/entity/InboxEvent.kt` and `src/main/kotlin/com/example/shopbox/inbox/repository/InboxEventRepository.kt` (PK = `messageId`, append-only)
 
 **Checkpoint**: 공통 인프라 완료 — User Story 구현 시작 가능
 
@@ -50,18 +50,18 @@
 
 ### Tests — US1
 
-- [ ] T010 [US1] **Red** — Write `src/test/kotlin/com/example/shopbox/order/OrderServiceTest.kt` (Mockk + Kotest BehaviorSpec): (1) createOrder → Order + OutboxEvent 동시 저장 검증, (2) OutboxEvent 저장 실패 시 전체 롤백 검증. `./gradlew test` 실행 → FAIL 확인
+- [x] T010 [US1] **Red** — Write `src/test/kotlin/com/example/shopbox/order/OrderServiceTest.kt` (Mockk + Kotest BehaviorSpec): (1) createOrder → Order + OutboxEvent 동시 저장 검증, (2) OutboxEvent 저장 실패 시 전체 롤백 검증. `./gradlew test` 실행 → FAIL 확인
 
 ### Implementation — US1
 
-- [ ] T011 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/entity/Order.kt` (BaseEntity 상속, `@SQLDelete`, `@SQLRestriction`, `@Tsid` PK) and `src/main/kotlin/com/example/shopbox/order/domain/enums/OrderStatus.kt` (PENDING / PAID / CANCELLED)
-- [ ] T012 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/repository/OrderRepository.kt` (Spring Data JPA)
-- [ ] T013 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/event/OrderCreatedEvent.kt` implementing `DomainEvent`
-- [ ] T014 [US1] **Green** — Implement `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt`: `@Transactional createOrder()` saves `Order` then `OutboxEvent` in single transaction. `./gradlew test` → OrderServiceTest PASS
-- [ ] T015 [US1] **Red** — Write `src/test/kotlin/com/example/shopbox/order/OrderControllerTest.kt` (Testcontainers + Kotest BehaviorSpec): `POST /api/orders` 성공 시 두 테이블 레코드 확인, `outbox_events.processed_at IS NULL` 검증. `./gradlew test` → FAIL 확인
-- [ ] T016 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/dto/request/CreateOrderRequest.kt` (Spring Validation, `@field:NotNull`) and `src/main/kotlin/com/example/shopbox/order/dto/response/OrderResponse.kt`
-- [ ] T017 [US1] **Green** — Implement `src/main/kotlin/com/example/shopbox/order/controller/OrderController.kt`: `POST /api/orders` endpoint, `@Valid` on request, `ApiResponse` wrapper. `./gradlew test` → OrderControllerTest PASS
-- [ ] T018 [US1] **Refactor** — Clean up `order/` package (naming, trailing commas per convention), run `./gradlew test` → still PASS
+- [x] T011 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/entity/Order.kt` (BaseEntity 상속, `@SQLDelete`, `@SQLRestriction`, `@Tsid` PK) and `src/main/kotlin/com/example/shopbox/order/domain/enums/OrderStatus.kt` (PENDING / PAID / CANCELLED)
+- [x] T012 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/repository/OrderRepository.kt` (Spring Data JPA)
+- [x] T013 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/event/OrderCreatedEvent.kt` implementing `DomainEvent`
+- [x] T014 [US1] **Green** — Implement `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt`: `@Transactional createOrder()` saves `Order` then `OutboxEvent` in single transaction. `./gradlew test` → OrderServiceTest PASS
+- [x] T015 [US1] **Red** — Write `src/test/kotlin/com/example/shopbox/order/OrderControllerTest.kt` (Testcontainers + Kotest BehaviorSpec): `POST /api/orders` 성공 시 두 테이블 레코드 확인, `outbox_events.processed_at IS NULL` 검증. `./gradlew test` → FAIL 확인
+- [x] T016 [P] [US1] Create `src/main/kotlin/com/example/shopbox/order/dto/request/CreateOrderRequest.kt` (Spring Validation, `@field:NotNull`) and `src/main/kotlin/com/example/shopbox/order/dto/response/OrderResponse.kt`
+- [x] T017 [US1] **Green** — Implement `src/main/kotlin/com/example/shopbox/order/controller/OrderController.kt`: `POST /api/orders` endpoint, `@Valid` on request, `ApiResponse` wrapper. `./gradlew test` → OrderControllerTest PASS
+- [x] T018 [US1] **Refactor** — Clean up `order/` package (naming, trailing commas per convention), run `./gradlew test` → still PASS
 
 **Checkpoint**: US1 독립 검증 가능 — `orders` + `outbox_events` 원자성 확인됨
 
@@ -75,19 +75,19 @@
 
 ### Tests — US2
 
-- [ ] T019 [US2] **Red** — Write `src/test/kotlin/com/example/shopbox/payment/PaymentServiceTest.kt` (Mockk + Kotest BehaviorSpec): (1) 신규 `message_id` → 결제 처리 + InboxEvent 저장, (2) 중복 `message_id` → 비즈니스 로직 skip, (3) 처리 중 오류 → InboxEvent 미저장. `./gradlew test` → FAIL 확인
+- [x] T019 [US2] **Red** — Write `src/test/kotlin/com/example/shopbox/payment/PaymentServiceTest.kt` (Mockk + Kotest BehaviorSpec): (1) 신규 `message_id` → 결제 처리 + InboxEvent 저장, (2) 중복 `message_id` → 비즈니스 로직 skip, (3) 처리 중 오류 → InboxEvent 미저장. `./gradlew test` → FAIL 확인
 
 ### Implementation — US2
 
-- [ ] T020 [P] [US2] Create `src/main/kotlin/com/example/shopbox/payment/entity/Payment.kt` (BaseEntity 상속, `@Tsid` PK) and `src/main/kotlin/com/example/shopbox/payment/domain/enums/PaymentStatus.kt` (PENDING / COMPLETED / FAILED)
-- [ ] T021 [P] [US2] Create `src/main/kotlin/com/example/shopbox/payment/repository/PaymentRepository.kt`
-- [ ] T022 [P] [US2] Create `src/main/kotlin/com/example/shopbox/payment/event/PaymentCompletedEvent.kt` implementing `DomainEvent`
-- [ ] T023 [US2] **Green** — Implement `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt`: `@KafkaListener(topics = ["order-events"])`, `@Transactional` with `InboxEventRepository.save()` → catch `DataIntegrityViolationException` for idempotency. `./gradlew test` → PaymentServiceTest PASS
-- [ ] T024 [US2] **Red** — Write `src/test/kotlin/com/example/shopbox/payment/PaymentControllerTest.kt` (Testcontainers + Kotest BehaviorSpec): `order-events` 토픽에 동일 메시지 2회 발행 → DB에서 `inbox_events` 중복 없음, `payments` 1건 확인. `./gradlew test` → FAIL 확인
-- [ ] T025 [P] [US2] Create minimal Inventory bounded context: `inventory/entity/Inventory.kt`, `inventory/domain/enums/InventoryStatus.kt`, `inventory/repository/InventoryRepository.kt`, `inventory/service/InventoryService.kt` (`@KafkaListener(topics = ["payment-events"])`, inbox 패턴 동일 적용), `inventory/event/StockReservedEvent.kt`
-- [ ] T026 [P] [US2] Create minimal Delivery bounded context: `delivery/entity/Delivery.kt`, `delivery/domain/enums/DeliveryStatus.kt`, `delivery/repository/DeliveryRepository.kt`, `delivery/service/DeliveryService.kt` (`@KafkaListener(topics = ["inventory-events"])`, inbox 패턴 동일 적용), `delivery/event/DeliveryStartedEvent.kt`
-- [ ] T027 [US2] **Green** — Implement `src/main/kotlin/com/example/shopbox/payment/controller/PaymentController.kt` (status 조회 placeholder). `./gradlew test` → PaymentControllerTest PASS
-- [ ] T028 [US2] **Refactor** — Clean up `payment/`, `inventory/`, `delivery/` packages, run `./gradlew test` → still PASS
+- [x] T020 [P] [US2] Create `src/main/kotlin/com/example/shopbox/payment/entity/Payment.kt` (BaseEntity 상속, `@Tsid` PK) and `src/main/kotlin/com/example/shopbox/payment/domain/enums/PaymentStatus.kt` (PENDING / COMPLETED / FAILED)
+- [x] T021 [P] [US2] Create `src/main/kotlin/com/example/shopbox/payment/repository/PaymentRepository.kt`
+- [x] T022 [P] [US2] Create `src/main/kotlin/com/example/shopbox/payment/event/PaymentCompletedEvent.kt` implementing `DomainEvent`
+- [x] T023 [US2] **Green** — Implement `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt`: `@KafkaListener(topics = ["order-events"])`, `@Transactional` with `InboxEventRepository.save()` → catch `DataIntegrityViolationException` for idempotency. `./gradlew test` → PaymentServiceTest PASS
+- [x] T024 [US2] **Red** — Write `src/test/kotlin/com/example/shopbox/payment/PaymentControllerTest.kt` (Testcontainers + Kotest BehaviorSpec): `order-events` 토픽에 동일 메시지 2회 발행 → DB에서 `inbox_events` 중복 없음, `payments` 1건 확인. `./gradlew test` → FAIL 확인
+- [x] T025 [P] [US2] Create minimal Inventory bounded context: `inventory/entity/Inventory.kt`, `inventory/domain/enums/InventoryStatus.kt`, `inventory/repository/InventoryRepository.kt`, `inventory/service/InventoryService.kt` (`@KafkaListener(topics = ["payment-events"])`, inbox 패턴 동일 적용), `inventory/event/StockReservedEvent.kt`
+- [x] T026 [P] [US2] Create minimal Delivery bounded context: `delivery/entity/Delivery.kt`, `delivery/domain/enums/DeliveryStatus.kt`, `delivery/repository/DeliveryRepository.kt`, `delivery/service/DeliveryService.kt` (`@KafkaListener(topics = ["inventory-events"])`, inbox 패턴 동일 적용), `delivery/event/DeliveryStartedEvent.kt`
+- [x] T027 [US2] **Green** — Implement `src/main/kotlin/com/example/shopbox/payment/controller/PaymentController.kt` (status 조회 placeholder). `./gradlew test` → PaymentControllerTest PASS
+- [x] T028 [US2] **Refactor** — Clean up `payment/`, `inventory/`, `delivery/` packages, run `./gradlew test` → still PASS
 
 **Checkpoint**: US2 독립 검증 가능 — 동일 메시지 재전송 시 중복 처리 0건 확인됨
 
@@ -101,15 +101,15 @@
 
 ### Tests — US3
 
-- [ ] T029 [US3] **Red** — Write `src/test/kotlin/com/example/shopbox/outbox/MessageRelayTest.kt` (Mockk + Kotest BehaviorSpec): (1) 미처리 N건 → 전부 발행 + `processed_at` 업데이트, (2) Kafka 오류 → `processed_at` null 유지, (3) 미처리 0건 → no-op. `./gradlew test` → FAIL 확인
+- [x] T029 [US3] **Red** — Write `src/test/kotlin/com/example/shopbox/outbox/MessageRelayTest.kt` (Mockk + Kotest BehaviorSpec): (1) 미처리 N건 → 전부 발행 + `processed_at` 업데이트, (2) Kafka 오류 → `processed_at` null 유지, (3) 미처리 0건 → no-op. `./gradlew test` → FAIL 확인
 
 ### Implementation — US3
 
-- [ ] T030 [US3] **Green** — Implement `src/main/kotlin/com/example/shopbox/outbox/relay/MessageRelay.kt`: `@Scheduled(fixedDelayString = "\${outbox.relay.interval:5000}")`, `OutboxEventRepository.findByProcessedAtIsNull()`, `KafkaTemplate.send().get()` (sync), 성공 시 `processedAt` 업데이트. `./gradlew test` → MessageRelayTest PASS
-- [ ] T031 [US3] Add `@EnableScheduling` to `src/main/kotlin/com/example/shopbox/ShopboxApplication.kt`
-- [ ] T032 [US3] **Red** — Write end-to-end test section in `src/test/kotlin/com/example/shopbox/order/OrderControllerTest.kt` (Testcontainers): `POST /api/orders` → relay 실행 대기 → `order-events` 소비 → `inbox_events` 저장 확인 (전체 흐름). `./gradlew test` → FAIL 확인
-- [ ] T033 [US3] **Green** — Wire `KafkaTemplate<String, String>` Bean 및 `OutboxEventRepository.findByProcessedAtIsNull()` 쿼리 메서드 확인, topic 라우팅 로직(`aggregate_type` → topic name) 구현. `./gradlew test` → OrderControllerTest 전체 PASS
-- [ ] T034 [US3] **Refactor** — Relay 로직 정리 (단일 책임), run `./gradlew test` → still PASS
+- [x] T030 [US3] **Green** — Implement `src/main/kotlin/com/example/shopbox/outbox/relay/MessageRelay.kt`: `@Scheduled(fixedDelayString = "\${outbox.relay.interval:5000}")`, `OutboxEventRepository.findByProcessedAtIsNull()`, `KafkaTemplate.send().get()` (sync), 성공 시 `processedAt` 업데이트. `./gradlew test` → MessageRelayTest PASS
+- [x] T031 [US3] Add `@EnableScheduling` to `src/main/kotlin/com/example/shopbox/ShopboxApplication.kt`
+- [x] T032 [US3] **Red** — Write end-to-end test section in `src/test/kotlin/com/example/shopbox/order/OrderControllerTest.kt` (Testcontainers): `POST /api/orders` → relay 실행 대기 → `order-events` 소비 → `inbox_events` 저장 확인 (전체 흐름). `./gradlew test` → FAIL 확인
+- [x] T033 [US3] **Green** — Wire `KafkaTemplate<String, String>` Bean 및 `OutboxEventRepository.findByProcessedAtIsNull()` 쿼리 메서드 확인, topic 라우팅 로직(`aggregate_type` → topic name) 구현. `./gradlew test` → OrderControllerTest 전체 PASS
+- [x] T034 [US3] **Refactor** — Relay 로직 정리 (단일 책임), run `./gradlew test` → still PASS
 
 **Checkpoint**: US3 독립 검증 가능 — 전체 이벤트 체인 자동 동작 확인됨
 
@@ -117,9 +117,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T035 [P] Write `src/test/kotlin/com/example/shopbox/inventory/InventoryServiceTest.kt` and `src/test/kotlin/com/example/shopbox/delivery/DeliveryServiceTest.kt` (Mockk) — inbox 중복 처리 엣지 케이스 검증
-- [ ] T036 [P] Verify all spec.md acceptance scenarios covered: SC-001 원자성, SC-002 중복 처리율 0%, SC-003 자동 재발행, SC-004 설정 변경, SC-005 Testcontainers 전체 흐름
-- [ ] T037 Run `./gradlew test` — final green gate, 전체 테스트 통과 확인
+- [x] T035 [P] Write `src/test/kotlin/com/example/shopbox/inventory/InventoryServiceTest.kt` and `src/test/kotlin/com/example/shopbox/delivery/DeliveryServiceTest.kt` (Mockk) — inbox 중복 처리 엣지 케이스 검증
+- [x] T036 [P] Verify all spec.md acceptance scenarios covered: SC-001 원자성, SC-002 중복 처리율 0%, SC-003 자동 재발행, SC-004 설정 변경, SC-005 Testcontainers 전체 흐름
+- [x] T037 Run `./gradlew test` — final green gate, 전체 테스트 통과 확인
 
 ---
 
