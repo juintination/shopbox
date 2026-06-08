@@ -1,4 +1,4 @@
-# Specify
+# Specify - Outbox, Inbox, Relay
 
 다음 요구사항을 기반으로 프로젝트 스펙을 작성해줘.
 
