@@ -3,10 +3,11 @@ package com.example.shopbox.inventory.service
 import com.example.shopbox.inbox.repository.InboxEventRepository
 import com.example.shopbox.inventory.entity.Inventory
 import com.example.shopbox.inventory.event.StockReservedEvent
-import com.example.shopbox.payment.event.PaymentCompletedEvent
 import com.example.shopbox.inventory.repository.InventoryRepository
+import com.example.shopbox.inventory.service.strategy.InventoryLockStrategy
 import com.example.shopbox.outbox.entity.OutboxEvent
 import com.example.shopbox.outbox.repository.OutboxEventRepository
+import com.example.shopbox.payment.event.PaymentCompletedEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.kafka.annotation.KafkaListener
@@ -20,6 +21,7 @@ class InventoryService(
     private val inventoryRepository: InventoryRepository,
     private val inboxEventRepository: InboxEventRepository,
     private val outboxEventRepository: OutboxEventRepository,
+    private val inventoryLockStrategy: InventoryLockStrategy,
     private val objectMapper: ObjectMapper,
 ) {
 
@@ -48,6 +50,13 @@ class InventoryService(
 
         val node = objectMapper.readTree(payload)
         val orderId = node.get("orderId").asLong()
+        val productId = node.get("productId").asLong()
+        val quantity = node.get("quantity").asInt()
+
+        inventoryLockStrategy.deductStock(
+            productId = productId,
+            quantity = quantity,
+        )
 
         val inventory = inventoryRepository.save(
             Inventory.create(orderId = orderId)

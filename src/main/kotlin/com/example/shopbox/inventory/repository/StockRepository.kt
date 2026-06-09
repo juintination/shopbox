@@ -1,6 +1,6 @@
-package com.example.shopbox.order.repository
+package com.example.shopbox.inventory.repository
 
-import com.example.shopbox.order.entity.Order
+import com.example.shopbox.inventory.entity.Stock
 import jakarta.persistence.LockModeType
 import jakarta.persistence.QueryHint
 import org.springframework.data.jpa.repository.JpaRepository
@@ -9,18 +9,16 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.jpa.repository.QueryHints
 import org.springframework.data.repository.query.Param
 
-interface OrderRepository : JpaRepository<Order, Long> {
+interface StockRepository : JpaRepository<Stock, Long> {
 
-    fun findByUserIdAndProductId(
-        userId: Long,
+    fun findByProductId(
         productId: Long,
-    ): Order?
+    ): Stock?
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints(QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000"))
-    @Query("SELECT o FROM Order o WHERE o.userId = :userId AND o.productId = :productId")
-    fun findByUserIdAndProductIdForUpdate(
-        @Param("userId") userId: Long,
+    @Query("SELECT s FROM Stock s WHERE s.productId = :productId")
+    fun findByProductIdForUpdate(
         @Param("productId") productId: Long,
-    ): Order?
+    ): Stock?
 }

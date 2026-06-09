@@ -1,9 +1,8 @@
 package com.example.shopbox.order.service
 
 import com.example.shopbox.order.dto.response.OrderResponse
-import com.example.shopbox.order.entity.Order
 import com.example.shopbox.order.event.OrderCreatedEvent
-import com.example.shopbox.order.repository.OrderRepository
+import com.example.shopbox.order.service.strategy.OrderLockStrategy
 import com.example.shopbox.outbox.entity.OutboxEvent
 import com.example.shopbox.outbox.repository.OutboxEventRepository
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class OrderService(
-    private val orderRepository: OrderRepository,
+    private val orderLockStrategy: OrderLockStrategy,
     private val outboxEventRepository: OutboxEventRepository,
     private val objectMapper: ObjectMapper,
 ) {
@@ -22,12 +21,10 @@ class OrderService(
         productId: Long,
         quantity: Int,
     ): OrderResponse {
-        val order = orderRepository.save(
-            Order.create(
-                userId = userId,
-                productId = productId,
-                quantity = quantity,
-            )
+        val order = orderLockStrategy.createOrder(
+            userId = userId,
+            productId = productId,
+            quantity = quantity,
         )
 
         val event = OrderCreatedEvent(

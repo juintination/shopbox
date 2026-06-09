@@ -17,8 +17,8 @@
 
 **Purpose**: 신규 의존성 추가 및 설정 파일 준비
 
-- [ ] T001 [P] `redisson-spring-boot-starter:4.5.0` 및 `testcontainers:redis` 의존성을 `build.gradle.kts`에 추가
-- [ ] T002 [P] `order.lock-strategy`, `inventory.lock-strategy`, `spring.data.redis` 설정을 `src/main/resources/application.yml`에 추가
+- [X] T001 [P] `redisson-spring-boot-starter:4.5.0` 및 `testcontainers:redis` 의존성을 `build.gradle.kts`에 추가
+- [X] T002 [P] `order.lock-strategy`, `inventory.lock-strategy`, `spring.data.redis` 설정을 `src/main/resources/application.yml`에 추가
 
 ---
 
@@ -28,11 +28,11 @@
 
 **⚠️ CRITICAL**: 이 Phase가 끝나야 US1·US2·US3 작업을 시작할 수 있다
 
-- [ ] T003 `@DistributedLock` 어노테이션 생성: `main/common/lock/DistributedLock.kt`
-- [ ] T004 `DistributedLockAspect` 구현 (T003 완료 후): `main/common/lock/DistributedLockAspect.kt` — SpEL 키 파싱, `@Order(Ordered.LOWEST_PRECEDENCE - 1)`, tryLock/unlock
-- [ ] T005 [P] `Stock` 엔티티 생성 (`@Version`, `deduct()`, Soft Delete): `main/inventory/entity/Stock.kt`
-- [ ] T006 `StockRepository` 생성 (`findByProductId`, `findByProductIdForUpdate` with `@Lock`): `main/inventory/repository/StockRepository.kt`
-- [ ] T007 [P] `Order` 엔티티에 `(userId, productId)` 복합 unique 제약 추가: `main/order/entity/Order.kt`
+- [X] T003 `@DistributedLock` 어노테이션 생성: `main/common/lock/DistributedLock.kt`
+- [X] T004 `DistributedLockAspect` 구현 (T003 완료 후): `main/common/lock/DistributedLockAspect.kt` — SpEL 키 파싱, `@Order(Ordered.LOWEST_PRECEDENCE - 1)`, tryLock/unlock
+- [X] T005 [P] `Stock` 엔티티 생성 (`@Version`, `deduct()`, Soft Delete): `main/inventory/entity/Stock.kt`
+- [X] T006 `StockRepository` 생성 (`findByProductId`, `findByProductIdForUpdate` with `@Lock`): `main/inventory/repository/StockRepository.kt`
+- [X] T007 [P] `Order` 엔티티에 `(userId, productId)` 복합 unique 제약 추가: `main/order/entity/Order.kt`
 
 **Checkpoint**: Foundation 완료 — US1·US2·US3 병렬 시작 가능
 
@@ -46,20 +46,20 @@
 
 ### Interface (enables test compilation)
 
-- [ ] T008 [US1] `OrderLockStrategy` 인터페이스 생성: `main/order/service/strategy/OrderLockStrategy.kt`
+- [X] T008 [US1] `OrderLockStrategy` 인터페이스 생성: `main/order/service/strategy/OrderLockStrategy.kt`
 
 ### Tests (Red — 구현 전 반드시 실패 확인)
 
-- [ ] T009 [P] [US1] `OrderOptimisticLockTest` 작성 (50 스레드, successCount == 1 검증): `test/order/service/strategy/OrderOptimisticLockTest.kt`
-- [ ] T010 [P] [US1] `OrderPessimisticLockTest` 작성 (50 스레드, successCount == 1 검증): `test/order/service/strategy/OrderPessimisticLockTest.kt`
-- [ ] T011 [P] [US1] `OrderDistributedLockTest` 작성 (50 스레드, successCount == 1 검증): `test/order/service/strategy/OrderDistributedLockTest.kt`
+- [X] T009 [P] [US1] `OrderOptimisticLockTest` 작성 (50 스레드, successCount == 1 검증): `test/order/service/strategy/OrderOptimisticLockTest.kt`
+- [X] T010 [P] [US1] `OrderPessimisticLockTest` 작성 (50 스레드, successCount == 1 검증): `test/order/service/strategy/OrderPessimisticLockTest.kt`
+- [X] T011 [P] [US1] `OrderDistributedLockTest` 작성 (50 스레드, successCount == 1 검증): `test/order/service/strategy/OrderDistributedLockTest.kt`
 
 ### Implementation (Green)
 
-- [ ] T012 [P] [US1] `OrderOptimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="optimistic")`, 재시도 3회): `main/order/service/strategy/OrderOptimisticLockStrategy.kt`
-- [ ] T013 [P] [US1] `OrderPessimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="pessimistic")`, SELECT FOR UPDATE): `main/order/service/strategy/OrderPessimisticLockStrategy.kt`
-- [ ] T014 [P] [US1] `OrderDistributedLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="distributed")`, `@DistributedLock`): `main/order/service/strategy/OrderDistributedLockStrategy.kt`
-- [ ] T015 [US1] `OrderService`가 주입된 `OrderLockStrategy`에 주문 생성을 위임하도록 수정: `main/order/service/OrderService.kt`
+- [X] T012 [P] [US1] `OrderOptimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="optimistic")`, 재시도 3회): `main/order/service/strategy/OrderOptimisticLockStrategy.kt`
+- [X] T013 [P] [US1] `OrderPessimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="pessimistic")`, SELECT FOR UPDATE): `main/order/service/strategy/OrderPessimisticLockStrategy.kt`
+- [X] T014 [P] [US1] `OrderDistributedLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="distributed")`, `@DistributedLock`): `main/order/service/strategy/OrderDistributedLockStrategy.kt`
+- [X] T015 [US1] `OrderService`가 주입된 `OrderLockStrategy`에 주문 생성을 위임하도록 수정: `main/order/service/OrderService.kt`
 
 **Checkpoint**: US1 완료 — `./gradlew test --tests "*.strategy.Order*LockTest"` 모두 Green
 
@@ -73,20 +73,20 @@
 
 ### Interface (enables test compilation)
 
-- [ ] T016 [US2] `InventoryLockStrategy` 인터페이스 생성: `main/inventory/service/strategy/InventoryLockStrategy.kt`
+- [X] T016 [US2] `InventoryLockStrategy` 인터페이스 생성: `main/inventory/service/strategy/InventoryLockStrategy.kt`
 
 ### Tests (Red — 구현 전 반드시 실패 확인)
 
-- [ ] T017 [P] [US2] `InventoryOptimisticLockTest` 작성 (200 스레드, quantity >= 0 검증): `test/inventory/service/strategy/InventoryOptimisticLockTest.kt`
-- [ ] T018 [P] [US2] `InventoryPessimisticLockTest` 작성 (200 스레드, successCount == 100 검증): `test/inventory/service/strategy/InventoryPessimisticLockTest.kt`
-- [ ] T019 [P] [US2] `InventoryDistributedLockTest` 작성 (200 스레드, successCount == 100 검증): `test/inventory/service/strategy/InventoryDistributedLockTest.kt`
+- [X] T017 [P] [US2] `InventoryOptimisticLockTest` 작성 (200 스레드, quantity >= 0 검증): `test/inventory/service/strategy/InventoryOptimisticLockTest.kt`
+- [X] T018 [P] [US2] `InventoryPessimisticLockTest` 작성 (200 스레드, successCount == 100 검증): `test/inventory/service/strategy/InventoryPessimisticLockTest.kt`
+- [X] T019 [P] [US2] `InventoryDistributedLockTest` 작성 (200 스레드, successCount == 100 검증): `test/inventory/service/strategy/InventoryDistributedLockTest.kt`
 
 ### Implementation (Green)
 
-- [ ] T020 [P] [US2] `InventoryOptimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="optimistic")`, @Version 재시도): `main/inventory/service/strategy/InventoryOptimisticLockStrategy.kt`
-- [ ] T021 [P] [US2] `InventoryPessimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="pessimistic")`, `findByProductIdForUpdate`): `main/inventory/service/strategy/InventoryPessimisticLockStrategy.kt`
-- [ ] T022 [P] [US2] `InventoryDistributedLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="distributed")`, `@DistributedLock`): `main/inventory/service/strategy/InventoryDistributedLockStrategy.kt`
-- [ ] T023 [US2] `InventoryService`가 Kafka Consumer 흐름 내에서 `InventoryLockStrategy.deductStock()`을 호출하도록 수정: `main/inventory/service/InventoryService.kt`
+- [X] T020 [P] [US2] `InventoryOptimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="optimistic")`, @Version 재시도): `main/inventory/service/strategy/InventoryOptimisticLockStrategy.kt`
+- [X] T021 [P] [US2] `InventoryPessimisticLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="pessimistic")`, `findByProductIdForUpdate`): `main/inventory/service/strategy/InventoryPessimisticLockStrategy.kt`
+- [X] T022 [P] [US2] `InventoryDistributedLockStrategy` 구현 (`@ConditionalOnProperty(havingValue="distributed")`, `@DistributedLock`): `main/inventory/service/strategy/InventoryDistributedLockStrategy.kt`
+- [X] T023 [US2] `InventoryService`가 Kafka Consumer 흐름 내에서 `InventoryLockStrategy.deductStock()`을 호출하도록 수정: `main/inventory/service/InventoryService.kt`
 
 **Checkpoint**: US2 완료 — `./gradlew test --tests "*.strategy.Inventory*LockTest"` 모두 Green
 
@@ -98,7 +98,7 @@
 
 **Independent Test**: `./gradlew test --tests "*.strategy.InventoryLockPerformanceTest"` — 테스트 로그에 세 전략의 측정 결과 출력 확인
 
-- [ ] T024 [US3] `InventoryLockPerformanceTest` 작성 — 세 전략을 각각 실행하며 처리 시간·성공/실패 건수·TPS를 측정 후 `logger.info()` 출력: `test/inventory/service/strategy/InventoryLockPerformanceTest.kt`
+- [X] T024 [US3] `InventoryLockPerformanceTest` 작성 — 세 전략을 각각 실행하며 처리 시간·성공/실패 건수·TPS를 측정 후 `logger.info()` 출력: `test/inventory/service/strategy/InventoryLockPerformanceTest.kt`
 
 **Checkpoint**: US3 완료 — 테스트 로그에 세 전략 측정 결과 수치 확인
 
@@ -108,7 +108,7 @@
 
 **Purpose**: 전체 통합 검증
 
-- [ ] T025 `./gradlew test` 전체 실행 — 기존 Outbox/Inbox/Relay 테스트 포함 전체 Green 확인
+- [X] T025 `./gradlew test` 전체 실행 — 기존 Outbox/Inbox/Relay 테스트 포함 전체 Green 확인
 
 ---
 
