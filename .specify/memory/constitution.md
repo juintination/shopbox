@@ -1,19 +1,21 @@
 <!--
 ## Sync Impact Report
 
-**Version**: 1.4.0 → 1.5.0 (MINOR UPDATE)
+**Version**: 1.5.0 → 1.6.0 (MINOR UPDATE)
 
 ### Changes
-- Entity Creation: All Entities MUST use `private constructor`; `create()` factory method in `companion object` is the sole external entry point
-- Test Fixture: Fixture Monkey with `KotlinPlugin` + `giveMeKotlinBuilder` REQUIRED for unit tests needing arbitrary Entity state
-- Coding Convention: Expression body function return types MUST be omitted when inferable from the RHS (`override` functions excepted)
-
-### Modified Principles
-- Development Standard (Coding Convention) — expression body return type omission rule added
+- Pre-Implementation Steps: MUST read existing code and follow observed style before writing any new code; deviations require prior explanation and confirmation
+- Entity Creation: All Entities MUST use `private constructor`; `create()` factory method in `companion object` is the sole external entry point (backfilled from v1.5.0 impact report — body was missing)
+- Test Fixture: Fixture Monkey with `KotlinPlugin` + `giveMeKotlinBuilder` REQUIRED for unit tests needing arbitrary Entity state (backfilled from v1.5.0 impact report — body was missing)
+- Coding Convention: Expression body function return types MUST be omitted when inferable from the RHS (`override` functions excepted) (backfilled from v1.5.0 impact report — body was missing)
 
 ### Added Sections
-- Entity 생성 원칙 / Entity Creation Principle
-- 테스트 픽스처 원칙 / Test Fixture Principle
+- Pre-Implementation Steps
+- Entity Creation (Development Standards)
+- Test Fixture (Development Standards)
+
+### Modified Sections
+- Coding Convention — expression body return type rule added
 
 ### Templates Requiring Updates
 - None
@@ -172,6 +174,77 @@ and domain events.
 
 ## Development Standards
 
+### Pre-Implementation Steps
+
+Before writing any implementation code for a new feature, the following sequence MUST be followed:
+
+1. **Read existing code first**
+   - Identify and fully read all production code similar to what will be implemented
+   - Extract the code style, patterns, and conventions currently in use
+
+2. **Follow the observed style**
+   - Exception handling approach
+   - Naming conventions
+   - Code structure and patterns
+   - Dependency injection style
+
+3. **Justify deviations before implementing**
+   - If there is a reason to deviate from the observed patterns, that reason MUST be
+     explained and confirmed before writing any code
+
+**Rationale**: Consistency across the codebase reduces cognitive load and prevents style
+fragmentation as the project grows. Deviations that are not discussed upfront are the
+primary source of later refactoring cost.
+
+### Entity Creation
+
+Every Entity MUST use `private constructor` to prevent arbitrary external instantiation.
+
+- The sole external entry point for Entity creation MUST be the `create()` factory method
+  declared in the Entity's `companion object`
+- Business invariants MUST be validated inside `create()` before delegating to the constructor
+- `kotlin("plugin.jpa")` auto-generates a no-arg constructor for Hibernate — this does NOT
+  conflict with `private constructor`
+
+```kotlin
+class Order private constructor(
+    val id: Long? = null,
+    val userId: Long,
+    // ...
+) : BaseEntity() {
+    companion object {
+        fun create(
+            userId: Long,
+            // ...
+        ) = Order(
+            userId = userId,
+            // ...
+        )
+    }
+}
+```
+
+### Test Fixture (Fixture Monkey)
+
+Unit tests requiring arbitrary Entity state MUST use **Fixture Monkey** to bypass `private constructor`.
+
+- `KotlinPlugin()` MUST be registered when building the `FixtureMonkey` instance
+- `giveMeKotlinBuilder<T>()` MUST be used instead of `giveMeBuilder` — correctly handles
+  Kotlin property references (`KProperty1`)
+- Nullable fields that will be dereferenced with `!!` (e.g., `id`) MUST be explicitly set
+  to avoid NPE at call time
+
+```kotlin
+val fixtureMonkey = FixtureMonkey.builder()
+    .plugin(KotlinPlugin())
+    .build()
+
+// id is nullable — set explicitly to prevent NPE on !!
+val order = fixtureMonkey.giveMeKotlinBuilder<Order>()
+    .set(Order::id, 1L)
+    .sample()
+```
+
 ### Soft Delete
 
 Every Entity MUST implement Soft Delete via `BaseEntity`.
@@ -210,6 +283,18 @@ provides sufficient semantic signal.
 
 All function and constructor parameters MUST be declared one-per-line, including
 single-parameter signatures. Trailing commas are MANDATORY.
+
+Expression body functions (`= ...`) MUST omit the return type when it is clearly inferable
+from the right-hand side. `override` functions are exempt — they MUST retain the return type
+to make the interface contract explicit.
+
+```kotlin
+// PROHIBITED — return type is redundant when inferable
+fun create(orderId: Long): Delivery = Delivery(orderId = orderId)
+
+// REQUIRED — omit when inferable
+fun create(orderId: Long) = Delivery(orderId = orderId)
+```
 
 String literals referenced in more than one place MUST be extracted to `companion object`
 constants. Event type names, fixed error messages, and topic names are canonical examples.
@@ -316,4 +401,4 @@ documented rationale and explicit agreement.
     - **PATCH**: clarifications, wording fixes, non-semantic refinements
 - Constitution compliance MUST be reviewed at each plan and implementation stage
 
-**Version**: 1.5.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-07
+**Version**: 1.6.0 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-12
