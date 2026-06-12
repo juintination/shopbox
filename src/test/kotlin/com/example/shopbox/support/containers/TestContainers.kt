@@ -1,5 +1,6 @@
 package com.example.shopbox.support.containers
 
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
@@ -9,5 +10,9 @@ object TestContainers {
         .apply { start() }
 
     val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka:4.2.0"))
+        .apply { start() }
+
+    val redis: GenericContainer<*> = GenericContainer(DockerImageName.parse("redis:7-alpine"))
+        .withExposedPorts(6379)
         .apply { start() }
 }

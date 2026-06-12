@@ -11,6 +11,8 @@ data class PaymentCompletedEvent(
     val paymentId: Long,
     val orderId: Long,
     val amount: Long,
+    val productId: Long = 0L,
+    val quantity: Int = 0,
 ) : DomainEvent {
     companion object {
         const val EVENT_TYPE = "PaymentCompleted"

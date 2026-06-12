@@ -30,6 +30,17 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
 outbox:
   relay:
     interval: 5000 # ms
+
+order:
+  lock-strategy: ${ORDER_LOCK_STRATEGY:optimistic}
+
+inventory:
+  lock-strategy: ${INVENTORY_LOCK_STRATEGY:optimistic}

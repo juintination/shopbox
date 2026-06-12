@@ -1,7 +1,7 @@
 package com.example.shopbox.order.service
 
 import com.example.shopbox.order.entity.Order
-import com.example.shopbox.order.repository.OrderRepository
+import com.example.shopbox.order.service.strategy.OrderLockStrategy
 import com.example.shopbox.outbox.repository.OutboxEventRepository
 import com.navercorp.fixturemonkey.FixtureMonkey
 import com.navercorp.fixturemonkey.kotlin.KotlinPlugin
@@ -21,10 +21,10 @@ class OrderServiceTest : BehaviorSpec({
         .plugin(KotlinPlugin())
         .build()
 
-    val orderRepository = mockk<OrderRepository>()
+    val orderLockStrategy = mockk<OrderLockStrategy>()
     val outboxEventRepository = mockk<OutboxEventRepository>()
     val orderService = OrderService(
-        orderRepository = orderRepository,
+        orderLockStrategy = orderLockStrategy,
         outboxEventRepository = outboxEventRepository,
         objectMapper = com.fasterxml.jackson.databind.ObjectMapper(),
     )
@@ -38,7 +38,7 @@ class OrderServiceTest : BehaviorSpec({
                 .set(Order::quantity, 2)
                 .sample()
 
-            every { orderRepository.save(any()) } returns savedOrder
+            every { orderLockStrategy.createOrder(any(), any(), any()) } returns savedOrder
             every { outboxEventRepository.save(any()) } answers { firstArg() }
 
             val result = orderService.createOrder(
@@ -62,7 +62,9 @@ class OrderServiceTest : BehaviorSpec({
 
     Given("outbox_events 저장에 오류가 발생하는 상황일 때") {
         When("사용자가 주문 생성을 요청하면") {
-            every { orderRepository.save(any()) } returns fixtureMonkey.giveMeKotlinBuilder<Order>().sample()
+            every { orderLockStrategy.createOrder(any(), any(), any()) } returns fixtureMonkey.giveMeKotlinBuilder<Order>()
+                .set(Order::id, 1L)
+                .sample()
             every { outboxEventRepository.save(any()) } throws DataIntegrityViolationException("outbox insert failed")
 
             Then("예외가 전파되어 트랜잭션이 롤백된다") {

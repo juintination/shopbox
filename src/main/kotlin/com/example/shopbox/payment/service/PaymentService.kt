@@ -54,6 +54,8 @@ class PaymentService(
 
         val node = objectMapper.readTree(payload)
         val orderId = node.get("orderId").asLong()
+        val productId = node.get("productId")?.asLong() ?: 0L
+        val quantity = node.get("quantity")?.asInt() ?: 0
 
         val payment = paymentRepository.save(
             Payment.create(
@@ -66,6 +68,8 @@ class PaymentService(
             paymentId = payment.id!!,
             orderId = orderId,
             amount = payment.amount,
+            productId = productId,
+            quantity = quantity,
         )
 
         outboxEventRepository.save(

@@ -3,6 +3,7 @@ package com.example.shopbox.inventory.service
 import com.example.shopbox.inbox.repository.InboxEventRepository
 import com.example.shopbox.inventory.entity.Inventory
 import com.example.shopbox.inventory.repository.InventoryRepository
+import com.example.shopbox.inventory.service.strategy.InventoryLockStrategy
 import com.example.shopbox.outbox.repository.OutboxEventRepository
 import com.example.shopbox.payment.event.PaymentCompletedEvent
 import com.navercorp.fixturemonkey.FixtureMonkey
@@ -13,7 +14,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 
 class InventoryServiceTest : BehaviorSpec({
@@ -25,12 +28,14 @@ class InventoryServiceTest : BehaviorSpec({
     val inventoryRepository = mockk<InventoryRepository>()
     val inboxEventRepository = mockk<InboxEventRepository>()
     val outboxEventRepository = mockk<OutboxEventRepository>()
+    val inventoryLockStrategy = mockk<InventoryLockStrategy>()
     val objectMapper = com.fasterxml.jackson.databind.ObjectMapper()
 
     val inventoryService = InventoryService(
         inventoryRepository = inventoryRepository,
         inboxEventRepository = inboxEventRepository,
         outboxEventRepository = outboxEventRepository,
+        inventoryLockStrategy = inventoryLockStrategy,
         objectMapper = objectMapper,
     )
 
@@ -41,7 +46,9 @@ class InventoryServiceTest : BehaviorSpec({
           "occurredAt": "2026-06-06T13:00:00Z",
           "paymentId": 1,
           "orderId": 1,
-          "amount": 0
+          "amount": 0,
+          "productId": 100,
+          "quantity": 2
         }
     """.trimIndent()
 
@@ -51,6 +58,7 @@ class InventoryServiceTest : BehaviorSpec({
         When("PaymentCompleted 이벤트가 수신되면") {
             Then("재고 처리 비즈니스 로직이 실행되고 inbox_events에 기록된다") {
                 every { inboxEventRepository.saveIfAbsent(any()) } returns true
+                every { inventoryLockStrategy.deductStock(any(), any()) } just runs
                 every { inventoryRepository.save(any()) } returns fixtureMonkey.giveMeKotlinBuilder<Inventory>()
                     .set(Inventory::id, 1L)
                     .sample()
@@ -63,6 +71,7 @@ class InventoryServiceTest : BehaviorSpec({
                     )
                 }
                 verify(exactly = 1) { inboxEventRepository.saveIfAbsent(any()) }
+                verify(exactly = 1) { inventoryLockStrategy.deductStock(any(), any()) }
                 verify(exactly = 1) { inventoryRepository.save(any()) }
             }
         }
@@ -80,6 +89,7 @@ class InventoryServiceTest : BehaviorSpec({
                     )
                 }
                 verify(exactly = 0) { inventoryRepository.save(any()) }
+                verify(exactly = 0) { inventoryLockStrategy.deductStock(any(), any()) }
             }
         }
     }
@@ -88,7 +98,7 @@ class InventoryServiceTest : BehaviorSpec({
         When("이벤트를 수신하면") {
             Then("예외가 전파된다") {
                 every { inboxEventRepository.saveIfAbsent(any()) } returns true
-                every { inventoryRepository.save(any()) } throws RuntimeException("inventory failed")
+                every { inventoryLockStrategy.deductStock(any(), any()) } throws RuntimeException("inventory failed")
 
                 shouldThrow<RuntimeException> {
                     inventoryService.processPaymentCompleted(
@@ -96,6 +106,7 @@ class InventoryServiceTest : BehaviorSpec({
                         payload = validPayload,
                     )
                 }
+                verify(exactly = 0) { inventoryRepository.save(any()) }
             }
         }
     }

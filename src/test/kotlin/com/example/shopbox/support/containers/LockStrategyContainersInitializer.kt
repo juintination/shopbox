@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.test.context.support.TestPropertySourceUtils
 
-class TestContainersInitializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
+class LockStrategyContainersInitializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
     override fun initialize(context: ConfigurableApplicationContext) {
         TestPropertySourceUtils.addInlinedPropertiesToEnvironment(
             context,
@@ -14,8 +14,6 @@ class TestContainersInitializer : ApplicationContextInitializer<ConfigurableAppl
             "spring.kafka.bootstrap-servers=${TestContainers.kafka.bootstrapServers}",
             "spring.data.redis.host=${TestContainers.redis.host}",
             "spring.data.redis.port=${TestContainers.redis.getMappedPort(6379)}",
-            "order.lock-strategy=optimistic",
-            "inventory.lock-strategy=optimistic",
         )
     }
 }

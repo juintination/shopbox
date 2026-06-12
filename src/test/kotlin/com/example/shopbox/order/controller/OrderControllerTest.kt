@@ -35,10 +35,10 @@ class OrderControllerTest : BehaviorSpec() {
         extension(SpringExtension)
 
         beforeEach {
-            orderRepository.deleteAll()
-            outboxEventRepository.deleteAll()
-            inboxEventRepository.deleteAll()
-            paymentRepository.deleteAll()
+            orderRepository.deleteAllInBatch()
+            outboxEventRepository.deleteAllInBatch()
+            inboxEventRepository.deleteAllInBatch()
+            paymentRepository.deleteAllInBatch()
         }
 
         Given("DB가 정상 동작 중일 때") {

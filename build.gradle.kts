@@ -46,6 +46,12 @@ dependencies {
     // Kafka
     implementation("org.springframework.kafka:spring-kafka")
 
+    // AOP
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+
+    // Redisson
+    implementation("org.redisson:redisson-spring-boot-starter:4.5.0")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
