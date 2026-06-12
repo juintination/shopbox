@@ -2,12 +2,10 @@ package com.example.shopbox.inventory.service.strategy
 
 import com.example.shopbox.common.exception.BusinessException
 import com.example.shopbox.inventory.repository.StockRepository
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-@ConditionalOnProperty(name = ["inventory.lock-strategy"], havingValue = "pessimistic")
 class InventoryPessimisticLockStrategy(
     private val stockRepository: StockRepository,
 ) : InventoryLockStrategy {

@@ -2,14 +2,12 @@ package com.example.shopbox.inventory.service.strategy
 
 import com.example.shopbox.common.exception.BusinessException
 import com.example.shopbox.inventory.repository.StockRepository
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 
 @Component
-@ConditionalOnProperty(name = ["inventory.lock-strategy"], havingValue = "optimistic")
 class InventoryOptimisticLockStrategy(
     private val stockRepository: StockRepository,
     private val transactionManager: PlatformTransactionManager,

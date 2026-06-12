@@ -4,12 +4,10 @@ import com.example.shopbox.common.exception.BusinessException
 import com.example.shopbox.common.lock.DistributedLock
 import com.example.shopbox.order.entity.Order
 import com.example.shopbox.order.repository.OrderRepository
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-@ConditionalOnProperty(name = ["order.lock-strategy"], havingValue = "distributed")
 class OrderDistributedLockStrategy(
     private val orderRepository: OrderRepository,
 ) : OrderLockStrategy {
