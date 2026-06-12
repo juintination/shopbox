@@ -63,7 +63,8 @@ outbox/relay/MessageRelay.kt         → outbox/relay/MessageRelayTest.kt
     - Controller: 요청/응답 처리만 담당
     - Service: 비즈니스 로직 + 트랜잭션 관리, **반드시 DTO를 반환한다 (Entity 반환 금지)**
     - Repository: 데이터 접근 (Spring Data JPA 직접 사용)
-- Service가 Entity를 반환하면 영속성 컨텍스트가 Controller까지 누수되어 예상치 못한 LazyInitializationException 또는 추가 쿼리가 발생할 수 있다. 트랜잭션 경계 안에서 DTO로 변환한 뒤 반환한다
+- Service가 Entity를 반환하면 영속성 컨텍스트가 Controller까지 누수되어 예상치 못한 LazyInitializationException 또는 추가 쿼리가 발생할 수 있다. 트랜잭션 경계 안에서
+  DTO로 변환한 뒤 반환한다
 
 ## 패키지 구조 원칙
 
@@ -177,6 +178,24 @@ src/main/kotlin/
 - Spring의 암묵적 동작보다 명시적인 코드를 선호한다
 - 각 클래스/함수는 단일 책임에 집중한다
 - Saga의 보상 트랜잭션은 당장 구현하지 않더라도 처음부터 설계에 반영해둔다
+
+## 구현 전 필수 단계
+
+새로운 기능을 구현하기 전에 반드시 다음 순서를 따른다:
+
+1. 기존 코드를 먼저 읽는다
+
+- 구현할 기능과 유사한 기존 코드를 전부 파악한다
+- 파악한 내용을 바탕으로 코드 스타일, 패턴, 컨벤션을 정리한다
+
+2. 파악한 스타일을 그대로 따른다
+
+- 예외 처리 방식
+- 네이밍 컨벤션
+- 코드 구조와 패턴
+- 의존성 주입 방식
+
+3. 기존 코드와 다른 방식으로 구현해야 할 이유가 있다면 구현 전에 반드시 이유를 설명하고 확인을 받는다
 
 ## Entity 생성 원칙
 
