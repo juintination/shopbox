@@ -7,7 +7,7 @@
 
 기존 `MessageRelay`의 단순 재시도 구조를 개선하여 `retry_count`를 추적하고,
 최대 재시도 횟수(`outbox.relay.max-retry`) 초과 시 `dead_letter_events` 테이블로 격리한다.
-격리된 이벤트는 `GET /dead-letters` / `POST /dead-letters/{id}/retry` API로 조회·재처리한다.
+격리된 이벤트는 `GET /api/dead-letters` / `POST /api/dead-letters/{id}/retry` API로 조회·재처리한다.
 
 ## Technical Context
 

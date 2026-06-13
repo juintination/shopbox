@@ -59,8 +59,8 @@
 
 ```
 1. [시나리오 3 완료 상태] dead_letter_events에 이벤트 존재
-2. GET /dead-letters → DLQ 목록에서 id 확인
-3. POST /dead-letters/{id}/retry 호출
+2. GET /api/dead-letters → DLQ 목록에서 id 확인
+3. POST /api/dead-letters/{id}/retry 호출
 4. outbox_events에 retry_count=0으로 새 레코드 등록
 5. dead_letter_events.deleted_at = now() (Soft delete)
 6. [Kafka UP] 다음 relay() 실행 → Kafka 발행 성공
@@ -69,7 +69,7 @@
 **검증 포인트**:
 - 신규 `outbox_events` 레코드 (retry_count=0)
 - `dead_letter_events.deleted_at IS NOT NULL`
-- `GET /dead-letters` 응답에서 해당 이벤트 미포함
+- `GET /api/dead-letters` 응답에서 해당 이벤트 미포함
 
 ---
 

@@ -62,11 +62,9 @@ fun findByProcessedAtIsNullAndRetryCountLessThan(maxRetry: Int): List<OutboxEven
 
 ## Decision 6: DeadLetterController 위치 및 경로
 
-**Decision**: `outbox/controller/DeadLetterController.kt`, 경로는 `/dead-letters`.
+**Decision**: `outbox/controller/DeadLetterController.kt`, 경로는 `/api/dead-letters`.
 
-**Rationale**: DLQ는 Outbox 패턴의 운영 컴포넌트이므로 `outbox` 패키지 내에 위치하는 것이 응집도상 적절하다. 기존 `OrderController`의 `@RequestMapping("/api/orders")` 패턴과 달리, DLQ는 운영 API이므로 `/api` prefix 없이 `/dead-letters`를 사용한다.
-
-**Note**: `/api` prefix 미사용은 기존 `OrderController` 패턴과 다르므로, 향후 일관성을 위해 `/api/dead-letters`로 변경할 수도 있다. 현재는 spec의 명세(`/dead-letters`)를 그대로 따른다.
+**Rationale**: DLQ는 Outbox 패턴의 운영 컴포넌트이므로 `outbox` 패키지 내에 위치하는 것이 응집도상 적절하다. 기존 `OrderController`의 `@RequestMapping("/api/orders")` 패턴과 일관성을 맞춰 `/api/dead-letters`를 사용한다.
 
 **Alternatives considered**:
-- `/api/dead-letters` → spec에서 `/dead-letters`로 명시되어 있으므로 현재는 spec 준수.
+- `/dead-letters` → 기존 spec 초안의 명세였으나, 기존 API 패턴(`/api/*`)과의 일관성을 위해 `/api/dead-letters`로 변경.

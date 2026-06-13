@@ -84,8 +84,8 @@ US1 이후 자연스러운 다음 단계.
 **Phase 2 — Dead Letter Queue**
 
 - **FR-008**: `dead_letter_events` 테이블을 신규 생성해야 한다 (`BaseEntity` 상속, Soft delete 적용).
-- **FR-009**: `GET /dead-letters` API는 `deleted_at IS NULL`인 DLQ 이벤트 목록을 반환해야 한다.
-- **FR-010**: `POST /dead-letters/{id}/retry` API는 해당 DLQ 이벤트를 `outbox_events`에 `retry_count = 0`으로 재등록해야 한다.
+- **FR-009**: `GET /api/dead-letters` API는 `deleted_at IS NULL`인 DLQ 이벤트 목록을 반환해야 한다.
+- **FR-010**: `POST /api/dead-letters/{id}/retry` API는 해당 DLQ 이벤트를 `outbox_events`에 `retry_count = 0`으로 재등록해야 한다.
 - **FR-011**: 재처리 등록 후 `dead_letter_events`는 Soft delete(현재 시각으로 `deleted_at` 업데이트)해야 한다.
 - **FR-012**: 존재하지 않는 id로 재처리 요청 시 예외를 반환해야 한다.
 
@@ -99,8 +99,8 @@ US1 이후 자연스러운 다음 단계.
 
 | Method | Endpoint                      | 설명              |
 |--------|-------------------------------|-----------------|
-| GET    | `/dead-letters`               | DLQ 이벤트 목록 조회  |
-| POST   | `/dead-letters/{id}/retry`    | 특정 DLQ 이벤트 재처리 |
+| GET    | `/api/dead-letters`               | DLQ 이벤트 목록 조회  |
+| POST   | `/api/dead-letters/{id}/retry`    | 특정 DLQ 이벤트 재처리 |
 
 ### Configuration
 

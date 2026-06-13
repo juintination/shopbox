@@ -22,14 +22,14 @@
 
 ---
 
-## GET /dead-letters
+## GET /api/dead-letters
 
 DLQ에 격리된 미재처리 이벤트 목록을 조회한다 (`deleted_at IS NULL`).
 
 ### Request
 
 ```
-GET /dead-letters
+GET /api/dead-letters
 Content-Type: application/json
 ```
 
@@ -69,14 +69,14 @@ Content-Type: application/json
 
 ---
 
-## POST /dead-letters/{id}/retry
+## POST /api/dead-letters/{id}/retry
 
 특정 DLQ 이벤트를 `outbox_events`에 재등록하고 Soft delete 처리한다.
 
 ### Request
 
 ```
-POST /dead-letters/123456789/retry
+POST /api/dead-letters/123456789/retry
 ```
 
 Path parameter:
