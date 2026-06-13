@@ -38,6 +38,7 @@ spring:
 outbox:
   relay:
     interval: 5000 # ms
+    max-retry: 5
 
 order:
   lock-strategy: ${ORDER_LOCK_STRATEGY:optimistic}
