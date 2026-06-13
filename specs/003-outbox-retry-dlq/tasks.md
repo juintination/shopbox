@@ -11,7 +11,7 @@
 
 **Purpose**: 기존 설정 파일에 신규 설정 추가
 
-- [ ] T001 `src/main/resources/application.yaml`에 `outbox.relay.max-retry: 5` 설정 추가
+- [X] T001 `src/main/resources/application.yaml`에 `outbox.relay.max-retry: 5` 설정 추가
 
 ---
 
@@ -21,13 +21,13 @@
 
 **⚠️ CRITICAL**: T002·T003 병렬 실행 가능. T004는 T003 완료 후 실행.
 
-- [ ] T002 [P] `src/main/kotlin/com/example/shopbox/outbox/entity/OutboxEvent.kt`에 `var retryCount: Int = 0` (
+- [X] T002 [P] `src/main/kotlin/com/example/shopbox/outbox/entity/OutboxEvent.kt`에 `var retryCount: Int = 0` (
   `@Column(name = "retry_count", nullable = false)`) 필드 추가
-- [ ] T003 [P] `src/main/kotlin/com/example/shopbox/outbox/entity/DeadLetterEvent.kt` 신규 생성 — `BaseEntity` 상속,
+- [X] T003 [P] `src/main/kotlin/com/example/shopbox/outbox/entity/DeadLetterEvent.kt` 신규 생성 — `BaseEntity` 상속,
   `private constructor`, `create()` factory, `@SQLRestriction("deleted_at is null")`, `@SQLDelete`,
   `@Table(name = "dead_letter_events", indexes = [Index(name = "idx_dead_letter_events_deleted_at", columnList = "deleted_at")])`,
   필드: `id(@Tsid)`, `outboxEventId`, `aggregateType`, `aggregateId`, `eventType`, `payload`, `errorMessage`
-- [ ] T004 `src/main/kotlin/com/example/shopbox/outbox/repository/DeadLetterEventRepository.kt` 신규 생성 —
+- [X] T004 `src/main/kotlin/com/example/shopbox/outbox/repository/DeadLetterEventRepository.kt` 신규 생성 —
   `JpaRepository<DeadLetterEvent, Long>` 상속 (T003 완료 후)
 
 **Checkpoint**: Foundation ready — US1·US2 구현 시작 가능
@@ -43,7 +43,7 @@
 
 ### Tests for User Story 1 (TDD — 🔴 Red 먼저 확인)
 
-- [ ] T005 [US1] `src/test/kotlin/com/example/shopbox/outbox/relay/MessageRelayTest.kt`에 다음 3개 시나리오 추가:
+- [X] T005 [US1] `src/test/kotlin/com/example/shopbox/outbox/relay/MessageRelayTest.kt`에 다음 3개 시나리오 추가:
     1. Kafka 발행 실패 (`retry_count < max-retry`) → `retry_count` 1 증가, `processed_at` 미변경,
        `deadLetterEventRepository.save()` 미호출
     2. Kafka 발행 실패 (`retry_count >= max-retry`) → `deadLetterEventRepository.save()` 1회 호출 (error_message 포함),
@@ -52,10 +52,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] `src/main/kotlin/com/example/shopbox/outbox/repository/OutboxEventRepository.kt`에서 기존
+- [X] T006 [US1] `src/main/kotlin/com/example/shopbox/outbox/repository/OutboxEventRepository.kt`에서 기존
   `findByProcessedAtIsNull()` 제거 후 `findByProcessedAtIsNullAndRetryCountLessThan(maxRetry: Int): List<OutboxEvent>` 추가 (
   T002 완료 후)
-- [ ] T007 [US1] `src/main/kotlin/com/example/shopbox/outbox/relay/MessageRelay.kt` 변경 —
+- [X] T007 [US1] `src/main/kotlin/com/example/shopbox/outbox/relay/MessageRelay.kt` 변경 —
   `@Value("\${outbox.relay.max-retry:5}") private val maxRetry: Int` 주입, `relay()` 로직을 다음으로 교체:
   `findByProcessedAtIsNullAndRetryCountLessThan(maxRetry)` 조회 → 발행 성공 시 `processedAt` 업데이트 → 발행 실패 시 `retryCount++` 후
   `save()`, `retryCount >= maxRetry`이면 `DeadLetterEvent.create(...)` 저장 + `processedAt` 업데이트 (T005·T006·T004 완료 후)
@@ -73,24 +73,24 @@
 
 ### Tests for User Story 2 (TDD — 🔴 Red 먼저 확인)
 
-- [ ] T008 [P] [US2] `src/test/kotlin/com/example/shopbox/outbox/service/DeadLetterServiceTest.kt` 신규 작성 — Mockk 단위 테스트,
+- [X] T008 [P] [US2] `src/test/kotlin/com/example/shopbox/outbox/service/DeadLetterServiceTest.kt` 신규 작성 — Mockk 단위 테스트,
   시나리오: (1) `findAll()` → `deleted_at IS NULL` 이벤트 목록 반환, (2) `retry(id)` → `outbox_events` 재등록 + DLQ Soft delete, (3)
   `retry(없는 id)` → `BusinessException` 발생
-- [ ] T009 [P] [US2] `src/test/kotlin/com/example/shopbox/outbox/controller/DeadLetterControllerTest.kt` 신규 작성 —
+- [X] T009 [P] [US2] `src/test/kotlin/com/example/shopbox/outbox/controller/DeadLetterControllerTest.kt` 신규 작성 —
   Testcontainers 통합 테스트 (`@SpringBootTest`, `LockStrategyContainersInitializer` 또는 동일 initializer 활용), 시나리오: (1)
   `GET /api/dead-letters` → 200 + 미재처리 목록, (2) `POST /api/dead-letters/{id}/retry` → 200 + `outbox_events` 신규 레코드, DLQ
   Soft delete 확인, (3) `POST /api/dead-letters/999/retry` → 400
 
 ### Implementation for User Story 2
 
-- [ ] T010 [P] [US2] `src/main/kotlin/com/example/shopbox/outbox/dto/response/DeadLetterResponse.kt` 신규 생성 — `id`,
+- [X] T010 [P] [US2] `src/main/kotlin/com/example/shopbox/outbox/dto/response/DeadLetterResponse.kt` 신규 생성 — `id`,
   `outboxEventId`, `aggregateType`, `aggregateId`, `eventType`, `payload`, `errorMessage`, `createdAt` 필드,
   `companion object { fun from(event: DeadLetterEvent) }` factory
-- [ ] T011 [US2] `src/main/kotlin/com/example/shopbox/outbox/service/DeadLetterService.kt` 신규 구현 —
+- [X] T011 [US2] `src/main/kotlin/com/example/shopbox/outbox/service/DeadLetterService.kt` 신규 구현 —
   `findAll(): List<DeadLetterResponse>`, `retry(id: Long): DeadLetterResponse` (없는 id →
   `BusinessException("DLQ 이벤트를 찾을 수 없습니다: id=$id")`; 재처리 시 `OutboxEvent` 신규 저장 + DLQ `deletedAt = now()` + `save()`) (
   T008·T010 완료 후)
-- [ ] T012 [US2] `src/main/kotlin/com/example/shopbox/outbox/controller/DeadLetterController.kt` 신규 구현 —
+- [X] T012 [US2] `src/main/kotlin/com/example/shopbox/outbox/controller/DeadLetterController.kt` 신규 구현 —
   `@RestController`, `@RequestMapping("/api/dead-letters")`, `GET /` →
   `ResponseEntity<ApiResponse<List<DeadLetterResponse>>>`, `POST /{id}/retry` →
   `ResponseEntity<ApiResponse<DeadLetterResponse>>` (T009·T011 완료 후)
@@ -103,9 +103,9 @@
 
 **Purpose**: 누락 케이스 보완 및 검증
 
-- [ ] T013 `src/test/kotlin/com/example/shopbox/outbox/controller/DeadLetterControllerTest.kt`에 이미 재처리된(deleted_at IS
+- [X] T013 `src/test/kotlin/com/example/shopbox/outbox/controller/DeadLetterControllerTest.kt`에 이미 재처리된(deleted_at IS
   NOT NULL) DLQ 이벤트 재처리 시도 → 400 Bad Request 시나리오 추가 (이미 재처리된 이벤트의 Soft delete 처리 여부 확인)
-- [ ] T014 `src/test/kotlin/com/example/shopbox/outbox/relay/MessageRelayTest.kt`에 `max-retry = 0` 설정 시 첫 번째 실패에서 즉시 DLQ
+- [X] T014 `src/test/kotlin/com/example/shopbox/outbox/relay/MessageRelayTest.kt`에 `max-retry = 0` 설정 시 첫 번째 실패에서 즉시 DLQ
   이동 시나리오 추가
 
 ---

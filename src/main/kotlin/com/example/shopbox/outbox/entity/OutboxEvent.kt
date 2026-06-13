@@ -32,4 +32,7 @@ class OutboxEvent(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "retry_count", nullable = false)
+    var retryCount: Int = 0,
 )
