@@ -34,6 +34,27 @@ class InventoryOptimisticLockStrategy(
         }
     }
 
+    override fun restoreStock(
+        productId: Long,
+        quantity: Int,
+    ) {
+        val template = TransactionTemplate(transactionManager)
+        for (attempt in 0 until MAX_RETRY) {
+            try {
+                template.execute {
+                    val stock = stockRepository.findByProductId(productId)
+                        ?: throw BusinessException("재고 정보를 찾을 수 없습니다: productId=$productId")
+                    stock.restore(quantity)
+                    stockRepository.saveAndFlush(stock)
+                }
+                return
+            } catch (e: ObjectOptimisticLockingFailureException) {
+                if (attempt == MAX_RETRY - 1) throw e
+                Thread.sleep(RETRY_BACKOFF_MS * (attempt + 1))
+            }
+        }
+    }
+
     companion object {
         private const val MAX_RETRY = 5
         private const val RETRY_BACKOFF_MS = 50L

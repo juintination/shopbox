@@ -1,6 +1,11 @@
 package com.example.shopbox.order.controller
 
+import com.example.shopbox.delivery.repository.DeliveryRepository
 import com.example.shopbox.inbox.repository.InboxEventRepository
+import com.example.shopbox.inventory.entity.Stock
+import com.example.shopbox.inventory.repository.InventoryRepository
+import com.example.shopbox.inventory.repository.StockRepository
+import com.example.shopbox.order.entity.enums.OrderStatus
 import com.example.shopbox.order.repository.OrderRepository
 import com.example.shopbox.outbox.relay.MessageRelay
 import com.example.shopbox.outbox.repository.OutboxEventRepository
@@ -29,16 +34,22 @@ class OrderControllerTest : BehaviorSpec() {
     @Autowired private lateinit var outboxEventRepository: OutboxEventRepository
     @Autowired private lateinit var inboxEventRepository: InboxEventRepository
     @Autowired private lateinit var paymentRepository: PaymentRepository
+    @Autowired private lateinit var inventoryRepository: InventoryRepository
+    @Autowired private lateinit var deliveryRepository: DeliveryRepository
+    @Autowired private lateinit var stockRepository: StockRepository
     @Autowired private lateinit var messageRelay: MessageRelay
 
     init {
         extension(SpringExtension)
 
         beforeEach {
+            deliveryRepository.deleteAllInBatch()
+            inventoryRepository.deleteAllInBatch()
+            paymentRepository.deleteAllInBatch()
             orderRepository.deleteAllInBatch()
             outboxEventRepository.deleteAllInBatch()
             inboxEventRepository.deleteAllInBatch()
-            paymentRepository.deleteAllInBatch()
+            stockRepository.deleteAllInBatch()
         }
 
         Given("DB가 정상 동작 중일 때") {
@@ -75,6 +86,32 @@ class OrderControllerTest : BehaviorSpec() {
                     }
 
                     paymentRepository.findAll().size shouldBe 1
+                }
+            }
+        }
+
+        Given("재고가 충분하고 모든 서비스가 정상 동작할 때") {
+            When("POST /api/orders 로 주문을 생성하고 Saga 전체 흐름이 실행되면") {
+                Then("Order 상태가 CONFIRMED 가 된다") {
+                    stockRepository.save(
+                        Stock.create(
+                            productId = 100L,
+                            quantity = 10,
+                        )
+                    )
+
+                    val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+                    val body = """{"userId": 1, "productId": 100, "quantity": 2}"""
+                    restTemplate.postForEntity("/api/orders", HttpEntity(body, headers), String::class.java)
+
+                    await().atMost(60, TimeUnit.SECONDS)
+                        .pollInterval(2, TimeUnit.SECONDS)
+                        .until {
+                            messageRelay.relay()
+                            orderRepository.findAll().any { it.status == OrderStatus.CONFIRMED }
+                        }
+
+                    orderRepository.findAll().first().status shouldBe OrderStatus.CONFIRMED
                 }
             }
         }

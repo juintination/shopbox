@@ -1,6 +1,8 @@
 package com.example.shopbox.delivery.service
 
 import com.example.shopbox.delivery.entity.Delivery
+import com.example.shopbox.delivery.entity.enums.DeliveryStatus
+import com.example.shopbox.delivery.event.DeliveryFailedEvent
 import com.example.shopbox.delivery.event.DeliveryStartedEvent
 import com.example.shopbox.delivery.repository.DeliveryRepository
 import com.example.shopbox.inbox.repository.InboxEventRepository
@@ -49,19 +51,59 @@ class DeliveryService(
         val node = objectMapper.readTree(payload)
         val orderId = node.get("orderId").asLong()
 
-        val delivery = deliveryRepository.save(
-            Delivery.create(orderId = orderId)
+        val delivery = Delivery.create(
+            orderId = orderId,
         )
+        delivery.status = DeliveryStatus.STARTED
+
+        val saved = deliveryRepository.save(delivery)
 
         val event = DeliveryStartedEvent(
-            deliveryId = delivery.id!!,
+            deliveryId = saved.id!!,
             orderId = orderId,
         )
 
         outboxEventRepository.save(
             OutboxEvent(
                 aggregateType = DeliveryStartedEvent.AGGREGATE_TYPE,
-                aggregateId = delivery.id,
+                aggregateId = saved.id,
+                eventType = event.eventType,
+                payload = objectMapper.writeValueAsString(event),
+            )
+        )
+    }
+
+    @Transactional
+    fun processDeliveryFailed(
+        messageId: String,
+        payload: String,
+    ) {
+        if (!inboxEventRepository.saveIfAbsent(messageId)) {
+            log.info { "Duplicate message skipped: $messageId" }
+            return
+        }
+
+        val node = objectMapper.readTree(payload)
+        val orderId = node.get("orderId").asLong()
+        val reason = node.get("reason").asText()
+
+        val delivery = Delivery.create(
+            orderId = orderId,
+        )
+        delivery.status = DeliveryStatus.FAILED
+
+        val saved = deliveryRepository.save(delivery)
+
+        val event = DeliveryFailedEvent(
+            deliveryId = saved.id!!,
+            orderId = orderId,
+            reason = reason,
+        )
+
+        outboxEventRepository.save(
+            OutboxEvent(
+                aggregateType = DeliveryFailedEvent.AGGREGATE_TYPE,
+                aggregateId = saved.id,
                 eventType = event.eventType,
                 payload = objectMapper.writeValueAsString(event),
             )
