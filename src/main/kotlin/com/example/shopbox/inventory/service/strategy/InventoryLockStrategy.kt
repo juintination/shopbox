@@ -5,4 +5,9 @@ interface InventoryLockStrategy {
         productId: Long,
         quantity: Int,
     )
+
+    fun restoreStock(
+        productId: Long,
+        quantity: Int,
+    )
 }

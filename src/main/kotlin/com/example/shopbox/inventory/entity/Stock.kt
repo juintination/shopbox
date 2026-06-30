@@ -60,4 +60,10 @@ class Stock private constructor(
         }
         quantity -= amount
     }
+
+    fun restore(
+        amount: Int,
+    ) {
+        quantity += amount
+    }
 }

@@ -17,10 +17,10 @@
 
 **⚠️ CRITICAL**: 이 Phase 완료 전에는 어떤 User Story도 시작할 수 없음
 
-- [ ] T001 `common/event/CompensationEvent.kt` 신규 생성 — `DomainEvent`를 상속하는 `reason: String` 필드 추가 인터페이스 (`interface CompensationEvent : DomainEvent { val reason: String }`)
-- [ ] T002 [P] `order/entity/enums/OrderStatus.kt` 변경 — `CONFIRMED` 추가 (`PENDING, PAID, CONFIRMED, CANCELLED`)
-- [ ] T003 [P] `payment/entity/enums/PaymentStatus.kt` 변경 — `REFUNDED` 추가 (`PENDING, COMPLETED, REFUNDED, FAILED`)
-- [ ] T004 [P] `inventory/entity/enums/InventoryStatus.kt` 변경 — `RESTORED` 추가 (`PENDING, RESERVED, RESTORED, FAILED`)
+- [X] T001 `common/event/CompensationEvent.kt` 신규 생성 — `DomainEvent`를 상속하는 `reason: String` 필드 추가 인터페이스 (`interface CompensationEvent : DomainEvent { val reason: String }`)
+- [X] T002 [P] `order/entity/enums/OrderStatus.kt` 변경 — `CONFIRMED` 추가 (`PENDING, PAID, CONFIRMED, CANCELLED`)
+- [X] T003 [P] `payment/entity/enums/PaymentStatus.kt` 변경 — `REFUNDED` 추가 (`PENDING, COMPLETED, REFUNDED, FAILED`)
+- [X] T004 [P] `inventory/entity/enums/InventoryStatus.kt` 변경 — `RESTORED` 추가 (`PENDING, RESERVED, RESTORED, FAILED`)
 
 **Checkpoint**: enum 변경 후 `./gradlew build` 통과 확인. T002~T004는 병렬 실행 가능 (서로 다른 파일).
 
@@ -34,18 +34,18 @@
 
 ### Tests for User Story 1 (🔴 Red 먼저 확인)
 
-- [ ] T005 [P] [US1] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processOrderCreated()` 호출 시 `payment.status = COMPLETED`로 저장되고 `PaymentCompleted` outbox 이벤트가 저장됨
-- [ ] T006 [P] [US1] `src/test/kotlin/com/example/shopbox/inventory/service/InventoryServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processPaymentCompleted()` 호출 시 `inventory.status = RESERVED`로 저장되고 `StockReserved` outbox 이벤트가 저장됨
-- [ ] T007 [P] [US1] `src/test/kotlin/com/example/shopbox/delivery/service/DeliveryServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processStockReserved()` 호출 시 `delivery.status = STARTED`로 저장되고 `DeliveryStarted` outbox 이벤트가 저장됨
-- [ ] T008 [P] [US1] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processDeliveryStarted(messageId, payload)` 호출 시 `order.status = CONFIRMED`로 업데이트됨 (Fixture Monkey로 Order 픽스처 생성 필요)
-- [ ] T009 [US1] `src/test/kotlin/com/example/shopbox/order/controller/OrderControllerTest.kt` 기존 파일 수정 — 정상 Saga 흐름 시나리오 추가: `POST /api/orders` 후 Relay 실행, DeliveryStarted 이벤트 발행까지 체인을 `@SpringBootTest` + Testcontainers(MySQL + Kafka)로 검증
+- [X] T005 [P] [US1] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processOrderCreated()` 호출 시 `payment.status = COMPLETED`로 저장되고 `PaymentCompleted` outbox 이벤트가 저장됨
+- [X] T006 [P] [US1] `src/test/kotlin/com/example/shopbox/inventory/service/InventoryServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processPaymentCompleted()` 호출 시 `inventory.status = RESERVED`로 저장되고 `StockReserved` outbox 이벤트가 저장됨
+- [X] T007 [P] [US1] `src/test/kotlin/com/example/shopbox/delivery/service/DeliveryServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processStockReserved()` 호출 시 `delivery.status = STARTED`로 저장되고 `DeliveryStarted` outbox 이벤트가 저장됨
+- [X] T008 [P] [US1] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 신규 작성 — BehaviorSpec, Mockk, 시나리오: `processDeliveryStarted(messageId, payload)` 호출 시 `order.status = CONFIRMED`로 업데이트됨 (Fixture Monkey로 Order 픽스처 생성 필요)
+- [X] T009 [US1] `src/test/kotlin/com/example/shopbox/order/controller/OrderControllerTest.kt` 기존 파일 수정 — 정상 Saga 흐름 시나리오 추가: `POST /api/orders` 후 Relay 실행, DeliveryStarted 이벤트 발행까지 체인을 `@SpringBootTest` + Testcontainers(MySQL + Kafka)로 검증
 
 ### Implementation for User Story 1 (T005~T009 Red 확인 후)
 
-- [ ] T010 [P] [US1] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `processOrderCreated()` 내 `paymentRepository.save()` 후 `payment.status = PaymentStatus.COMPLETED` 업데이트 + `paymentRepository.save(payment)` 재호출 추가
-- [ ] T011 [P] [US1] `src/main/kotlin/com/example/shopbox/inventory/service/InventoryService.kt` 수정 — `processPaymentCompleted()` 내 `inventoryRepository.save()` 후 `inventory.status = InventoryStatus.RESERVED` 업데이트 + `inventoryRepository.save(inventory)` 재호출 추가
-- [ ] T012 [P] [US1] `src/main/kotlin/com/example/shopbox/delivery/service/DeliveryService.kt` 수정 — `processStockReserved()` 내 `deliveryRepository.save()` 후 `delivery.status = DeliveryStatus.STARTED` 업데이트 + `deliveryRepository.save(delivery)` 재호출 추가
-- [ ] T013 [US1] `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt` 수정 — `@KafkaListener(topics = [DeliveryStartedEvent.TOPIC], groupId = "shopbox-order-delivery-consumer") fun onDeliveryStarted()` 추가 + `@Transactional fun processDeliveryStarted(messageId, payload)` 구현 (Inbox 멱등성 처리 포함, `order.status = OrderStatus.CONFIRMED`)
+- [X] T010 [P] [US1] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `processOrderCreated()` 내 save 전에 `payment.status = PaymentStatus.COMPLETED` 설정
+- [X] T011 [P] [US1] `src/main/kotlin/com/example/shopbox/inventory/service/InventoryService.kt` 수정 — `processPaymentCompleted()` 내 save 전에 `inventory.status = InventoryStatus.RESERVED` 설정. `Inventory.create()`에 productId, quantity 추가
+- [X] T012 [P] [US1] `src/main/kotlin/com/example/shopbox/delivery/service/DeliveryService.kt` 수정 — `processStockReserved()` 내 save 전에 `delivery.status = DeliveryStatus.STARTED` 설정
+- [X] T013 [US1] `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt` 수정 — `onDeliveryStarted()` + `processDeliveryStarted()` 추가 (orderRepository, inboxEventRepository 주입)
 
 **Checkpoint**: `PaymentServiceTest`, `InventoryServiceTest`, `DeliveryServiceTest`, `OrderServiceTest` 전체 통과 + `OrderControllerTest` 정상 흐름 시나리오 통과. US1 독립 검증 완료.
 
@@ -59,15 +59,15 @@
 
 ### Tests for User Story 2 (🔴 Red 먼저 확인)
 
-- [ ] T014 [P] [US2] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — 시나리오 추가: `processPaymentFailed(messageId, payload)` 호출 시 (1) `payment.status = FAILED`로 저장됨, (2) `outbox_events`에 `PaymentFailed` 이벤트 저장됨, (3) 동일 messageId 재호출 시 중복 처리 skip됨
-- [ ] T015 [P] [US2] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 수정 — 시나리오 추가: `processPaymentEvent(messageId, payload)` 호출 시 `eventType = "PaymentFailed"`면 (1) `order.status = CANCELLED`로 업데이트됨, (2) `outbox_events`에 `OrderCancelled` 이벤트 저장됨
+- [X] T014 [P] [US2] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — 시나리오 추가: `processPaymentFailed(messageId, payload)` 호출 시 (1) `payment.status = FAILED`로 저장됨, (2) `outbox_events`에 `PaymentFailed` 이벤트 저장됨, (3) 동일 messageId 재호출 시 중복 처리 skip됨
+- [X] T015 [P] [US2] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 수정 — 시나리오 추가: `processPaymentEvent(messageId, payload)` 호출 시 `eventType = "PaymentFailed"`면 (1) `order.status = CANCELLED`로 업데이트됨, (2) `outbox_events`에 `OrderCancelled` 이벤트 저장됨
 
 ### Implementation for User Story 2 (T014~T015 Red 확인 후)
 
-- [ ] T016 [P] [US2] `src/main/kotlin/com/example/shopbox/order/event/OrderCancelledEvent.kt` 신규 생성 — `CompensationEvent` 구현, `reason: String`, `orderId: Long`, companion object에 `EVENT_TYPE = "OrderCancelled"`, `AGGREGATE_TYPE = "Order"`, `TOPIC = "order-events"`
-- [ ] T017 [P] [US2] `src/main/kotlin/com/example/shopbox/payment/event/PaymentFailedEvent.kt` 신규 생성 — `CompensationEvent` 구현, `reason: String`, `paymentId: Long`, `orderId: Long`, companion object에 `EVENT_TYPE = "PaymentFailed"`, `AGGREGATE_TYPE = "Payment"`, `TOPIC = "payment-events"`
-- [ ] T018 [US2] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `@Transactional fun processPaymentFailed(messageId: String, payload: String)` 추가 — Inbox 처리, `payment.status = FAILED`, `outbox_events`에 `PaymentFailedEvent` 저장 (T017 완료 후)
-- [ ] T019 [US2] `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt` 수정 — `@KafkaListener(topics = [PaymentFailedEvent.TOPIC], groupId = "shopbox-order-saga-consumer") fun onPaymentEvent()` 추가 + `@Transactional fun processPaymentEvent(messageId, payload)` 구현 — `eventType` 분기: `PaymentFailed` → `order.status = CANCELLED` + `OrderCancelledEvent` outbox 저장 (T016, T017 완료 후)
+- [X] T016 [P] [US2] `src/main/kotlin/com/example/shopbox/order/event/OrderCancelledEvent.kt` 신규 생성
+- [X] T017 [P] [US2] `src/main/kotlin/com/example/shopbox/payment/event/PaymentFailedEvent.kt` 신규 생성
+- [X] T018 [US2] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `processPaymentFailed()` 추가
+- [X] T019 [US2] `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt` 수정 — `onPaymentEvent()` + `processPaymentEvent()` 추가
 
 **Checkpoint**: `PaymentServiceTest` + `OrderServiceTest` US2 시나리오 전체 통과. US2 독립 검증 완료.
 
@@ -81,17 +81,17 @@
 
 ### Tests for User Story 3 (🔴 Red 먼저 확인)
 
-- [ ] T020 [P] [US3] `src/test/kotlin/com/example/shopbox/inventory/service/InventoryServiceTest.kt` 수정 — 시나리오 추가: `processStockReservationFailed(messageId, payload)` 호출 시 (1) `inventory.status = FAILED`로 저장됨, (2) `outbox_events`에 `StockReservationFailed` 이벤트 저장됨
-- [ ] T021 [P] [US3] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — 시나리오 추가: `processInventoryEvent(messageId, payload)` 호출 시 `eventType = "StockReservationFailed"`면 (1) `payment.status = REFUNDED`로 업데이트됨, (2) `outbox_events`에 `PaymentRefunded` 이벤트 저장됨
-- [ ] T022 [P] [US3] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 수정 — 시나리오 추가: `processPaymentEvent(messageId, payload)` 호출 시 `eventType = "PaymentRefunded"`면 (1) `order.status = CANCELLED`로 업데이트됨, (2) `outbox_events`에 `OrderCancelled` 이벤트 저장됨
+- [X] T020 [P] [US3] `src/test/kotlin/com/example/shopbox/inventory/service/InventoryServiceTest.kt` 수정 — `processStockReservationFailed()` 테스트 추가
+- [X] T021 [P] [US3] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — `processInventoryEvent(StockReservationFailed)` 테스트 추가
+- [X] T022 [P] [US3] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 수정 — `processPaymentEvent(PaymentRefunded)` 테스트 추가
 
 ### Implementation for User Story 3 (T020~T022 Red 확인 후)
 
-- [ ] T023 [P] [US3] `src/main/kotlin/com/example/shopbox/inventory/event/StockReservationFailedEvent.kt` 신규 생성 — `CompensationEvent` 구현, `reason: String`, `orderId: Long`, `productId: Long`, `quantity: Int`, companion object에 `EVENT_TYPE = "StockReservationFailed"`, `AGGREGATE_TYPE = "Inventory"`, `TOPIC = "inventory-events"`
-- [ ] T024 [P] [US3] `src/main/kotlin/com/example/shopbox/payment/event/PaymentRefundedEvent.kt` 신규 생성 — `CompensationEvent` 구현, `reason: String`, `paymentId: Long`, `orderId: Long`, companion object에 `EVENT_TYPE = "PaymentRefunded"`, `AGGREGATE_TYPE = "Payment"`, `TOPIC = "payment-events"`
-- [ ] T025 [US3] `src/main/kotlin/com/example/shopbox/inventory/service/InventoryService.kt` 수정 — `@Transactional fun processStockReservationFailed(messageId: String, payload: String)` 추가 — Inbox 처리, `inventory.status = FAILED`, `outbox_events`에 `StockReservationFailedEvent` 저장 (T023 완료 후)
-- [ ] T026 [US3] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `@KafkaListener(topics = [StockReservationFailedEvent.TOPIC], groupId = "shopbox-payment-saga-consumer") fun onInventoryEvent()` 추가 + `@Transactional fun processInventoryEvent(messageId, payload)` 구현 — `eventType` 분기: `StockReservationFailed` → `payment.status = REFUNDED` + `PaymentRefundedEvent` outbox 저장 (T024 완료 후)
-- [ ] T027 [US3] `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt` 수정 — `processPaymentEvent()` 내 `PaymentRefunded` 분기 추가 — `order.status = CANCELLED` + `OrderCancelledEvent` outbox 저장 (T019, T024 완료 후)
+- [X] T023 [P] [US3] `src/main/kotlin/com/example/shopbox/inventory/event/StockReservationFailedEvent.kt` 신규 생성
+- [X] T024 [P] [US3] `src/main/kotlin/com/example/shopbox/payment/event/PaymentRefundedEvent.kt` 신규 생성
+- [X] T025 [US3] `src/main/kotlin/com/example/shopbox/inventory/service/InventoryService.kt` 수정 — `processStockReservationFailed()` 추가
+- [X] T026 [US3] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `onInventoryEvent()` + `processInventoryEvent()` 추가
+- [X] T027 [US3] `src/main/kotlin/com/example/shopbox/order/service/OrderService.kt` 수정 — `processPaymentEvent()` 내 `PaymentRefunded` 분기 포함
 
 **Checkpoint**: `InventoryServiceTest` + `PaymentServiceTest` + `OrderServiceTest` US3 시나리오 전체 통과. US3 독립 검증 완료.
 
@@ -105,17 +105,17 @@
 
 ### Tests for User Story 4 (🔴 Red 먼저 확인)
 
-- [ ] T028 [P] [US4] `src/test/kotlin/com/example/shopbox/delivery/service/DeliveryServiceTest.kt` 수정 — 시나리오 추가: `processDeliveryFailed(messageId, payload)` 호출 시 (1) `delivery.status = FAILED`로 저장됨, (2) `outbox_events`에 `DeliveryFailed` 이벤트 저장됨
-- [ ] T029 [P] [US4] `src/test/kotlin/com/example/shopbox/inventory/service/InventoryServiceTest.kt` 수정 — 시나리오 추가: `processDeliveryEvent(messageId, payload)` 호출 시 `eventType = "DeliveryFailed"`면 (1) `inventory.status = RESTORED`로 업데이트됨, (2) Stock 복구됨, (3) `outbox_events`에 `StockRestored` 이벤트 저장됨
-- [ ] T030 [P] [US4] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — 시나리오 추가: `processInventoryEvent(messageId, payload)` 호출 시 `eventType = "StockRestored"`면 (1) `payment.status = REFUNDED`로 업데이트됨, (2) `outbox_events`에 `PaymentRefunded` 이벤트 저장됨
+- [X] T028 [P] [US4] `src/test/kotlin/com/example/shopbox/delivery/service/DeliveryServiceTest.kt` 수정 — `processDeliveryFailed()` 테스트 추가
+- [X] T029 [P] [US4] `src/test/kotlin/com/example/shopbox/inventory/service/InventoryServiceTest.kt` 수정 — `processDeliveryFailed()` 테스트 추가 (RESTORED, StockRestored)
+- [X] T030 [P] [US4] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — `processInventoryEvent(StockRestored)` 테스트 추가
 
 ### Implementation for User Story 4 (T028~T030 Red 확인 후)
 
-- [ ] T031 [P] [US4] `src/main/kotlin/com/example/shopbox/delivery/event/DeliveryFailedEvent.kt` 신규 생성 — `CompensationEvent` 구현, `reason: String`, `deliveryId: Long`, `orderId: Long`, companion object에 `EVENT_TYPE = "DeliveryFailed"`, `AGGREGATE_TYPE = "Delivery"`, `TOPIC = "delivery-events"`
-- [ ] T032 [P] [US4] `src/main/kotlin/com/example/shopbox/inventory/event/StockRestoredEvent.kt` 신규 생성 — `CompensationEvent` 구현, `reason: String`, `inventoryId: Long`, `orderId: Long`, `productId: Long`, `quantity: Int`, companion object에 `EVENT_TYPE = "StockRestored"`, `AGGREGATE_TYPE = "Inventory"`, `TOPIC = "inventory-events"`
-- [ ] T033 [US4] `src/main/kotlin/com/example/shopbox/delivery/service/DeliveryService.kt` 수정 — `@Transactional fun processDeliveryFailed(messageId: String, payload: String)` 추가 — Inbox 처리, `delivery.status = FAILED`, `outbox_events`에 `DeliveryFailedEvent` 저장 (T031 완료 후)
-- [ ] T034 [US4] `src/main/kotlin/com/example/shopbox/inventory/service/InventoryService.kt` 수정 — `@KafkaListener(topics = [DeliveryFailedEvent.TOPIC], groupId = "shopbox-inventory-saga-consumer") fun onDeliveryEvent()` 추가 + `@Transactional fun processDeliveryEvent(messageId, payload)` 구현 — `eventType` 분기: `DeliveryFailed` → Stock 복구 (`inventoryLockStrategy` 역방향), `inventory.status = RESTORED`, `outbox_events`에 `StockRestoredEvent` 저장 (T032 완료 후)
-- [ ] T035 [US4] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `processInventoryEvent()` 내 `StockRestored` 분기 추가 — `payment.status = REFUNDED` + `PaymentRefundedEvent` outbox 저장 (T026, T032 완료 후)
+- [X] T031 [P] [US4] `src/main/kotlin/com/example/shopbox/delivery/event/DeliveryFailedEvent.kt` 신규 생성
+- [X] T032 [P] [US4] `src/main/kotlin/com/example/shopbox/inventory/event/StockRestoredEvent.kt` 신규 생성
+- [X] T033 [US4] `src/main/kotlin/com/example/shopbox/delivery/service/DeliveryService.kt` 수정 — `processDeliveryFailed()` 추가
+- [X] T034 [US4] `src/main/kotlin/com/example/shopbox/inventory/service/InventoryService.kt` 수정 — `onDeliveryFailed()` + `processDeliveryFailed()` 추가 (Stock 복구 포함, RESTORED)
+- [X] T035 [US4] `src/main/kotlin/com/example/shopbox/payment/service/PaymentService.kt` 수정 — `processInventoryEvent()` 내 `StockRestored` 분기 포함
 
 **Checkpoint**: `DeliveryServiceTest` + `InventoryServiceTest` + `PaymentServiceTest` US4 시나리오 전체 통과. US4 독립 검증 완료.
 
@@ -125,9 +125,9 @@
 
 **Purpose**: 멱등성 검증 + `MessageRelay.topicFor()` 보상 이벤트 토픽 매핑 확인
 
-- [ ] T036 [P] `src/main/kotlin/com/example/shopbox/outbox/relay/MessageRelay.kt` 수정 — `topicFor()` 내 보상 이벤트 Aggregate Type 매핑 추가 확인 (이미 `else -> "$aggregateType-events".lowercase()` fallback으로 커버되는지 검증, 미커버 시 명시적 매핑 추가)
-- [ ] T037 [P] `src/test/kotlin/com/example/shopbox/order/service/OrderServiceTest.kt` 수정 — 멱등성 시나리오 추가: 동일 `messageId`로 `processPaymentEvent()` 재호출 시 `OrderCancelled`가 두 번 저장되지 않음 검증
-- [ ] T038 [P] `src/test/kotlin/com/example/shopbox/payment/service/PaymentServiceTest.kt` 수정 — 멱등성 시나리오 추가: 동일 `messageId`로 `processInventoryEvent()` 재호출 시 `PaymentRefunded`가 두 번 저장되지 않음 검증
+- [X] T036 [P] `MessageRelay.topicFor()` 검증 — 기존 `else -> "$aggregateType-events".lowercase()` fallback이 모든 보상 이벤트 커버 확인 (변경 불필요)
+- [X] T037 [P] `OrderServiceTest` 멱등성 시나리오 — 동일 messageId로 `processPaymentEvent()` 재호출 시 skip 검증 (이미 포함)
+- [X] T038 [P] `PaymentServiceTest` 멱등성 시나리오 — 동일 messageId로 `processInventoryEvent()` 재호출 시 skip 검증 (이미 포함)
 
 **Checkpoint**: 전체 `./gradlew test` 통과 확인. `OrderControllerTest` Saga 정상 흐름 통합 테스트 통과 포함.
 

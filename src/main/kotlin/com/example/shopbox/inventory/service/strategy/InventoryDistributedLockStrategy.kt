@@ -22,4 +22,16 @@ class InventoryDistributedLockStrategy(
         stock.deduct(quantity)
         stockRepository.save(stock)
     }
+
+    @DistributedLock(key = "stock:{productId}")
+    @Transactional
+    override fun restoreStock(
+        productId: Long,
+        quantity: Int,
+    ) {
+        val stock = stockRepository.findByProductId(productId)
+            ?: throw BusinessException("재고 정보를 찾을 수 없습니다: productId=$productId")
+        stock.restore(quantity)
+        stockRepository.save(stock)
+    }
 }

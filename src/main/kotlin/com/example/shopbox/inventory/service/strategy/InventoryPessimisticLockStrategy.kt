@@ -20,4 +20,15 @@ class InventoryPessimisticLockStrategy(
         stock.deduct(quantity)
         stockRepository.save(stock)
     }
+
+    @Transactional
+    override fun restoreStock(
+        productId: Long,
+        quantity: Int,
+    ) {
+        val stock = stockRepository.findByProductIdForUpdate(productId)
+            ?: throw BusinessException("재고 정보를 찾을 수 없습니다: productId=$productId")
+        stock.restore(quantity)
+        stockRepository.save(stock)
+    }
 }

@@ -29,6 +29,12 @@ class Inventory private constructor(
     @Column(name = "order_id", nullable = false, columnDefinition = "BIGINT UNSIGNED")
     val orderId: Long,
 
+    @Column(name = "product_id", nullable = false, columnDefinition = "BIGINT UNSIGNED")
+    val productId: Long,
+
+    @Column(nullable = false)
+    val quantity: Int,
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     var status: InventoryStatus = InventoryStatus.PENDING,
@@ -36,8 +42,12 @@ class Inventory private constructor(
     companion object {
         fun create(
             orderId: Long,
+            productId: Long,
+            quantity: Int,
         ) = Inventory(
             orderId = orderId,
+            productId = productId,
+            quantity = quantity,
         )
     }
 }
